@@ -1,4 +1,5 @@
 /* global console, PARTICLES */
+//reference http://jabtunes.com/labs/3d/dof/webgl_postprocessing_dof2.html
 
 'use strict';
 
@@ -17,8 +18,10 @@ var PARTICLES = (function() {
 
             init = function() {
                 console.log('PARTICLES.init called');
+                debugger;
 
                 container = document.createElement( 'div' );
+                container.id = "particles";
                 document.body.appendChild( container );
 
                 camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 5000 );
@@ -39,9 +42,8 @@ var PARTICLES = (function() {
 
                     scene.add( particle );
                 }
-
                 renderer = new THREE.CanvasRenderer();
-                renderer.setClearColor( 0x000040 );
+                renderer.setClearColor( 0x000000 );
                 renderer.setPixelRatio( window.devicePixelRatio );
                 renderer.setSize( window.innerWidth, window.innerHeight );
                 container.appendChild( renderer.domElement );
@@ -59,8 +61,54 @@ var PARTICLES = (function() {
 
                 window.addEventListener( 'resize', onWindowResize, false );
                 animate();
+                addGui();
             },
+            addGui = function(){
+                var gui = new dat.GUI();
+                var params = {
+                    interation: 5000
+                };
+                gui.add(params, 'interation').onFinishChange(function(){
+                    // refresh based on the new value of params.interation
+                    console.log('######' + iteration);
+                })
+                //gui.add( effectController, "threshold", 0, 1, 0.001 ).onChange( matChanger );
 
+                // gui.add( effectController, "enabled" ).onChange( matChanger );
+                // gui.add( effectController, "jsDepthCalculation" ).onChange( matChanger );
+                // gui.add( effectController, "shaderFocus" ).onChange( matChanger );
+                // gui.add( effectController, "focalDepth", 0.0, 200.0 ).listen().onChange( matChanger );
+
+                // gui.add( effectController, "fstop", 0.1, 22, 0.001 ).onChange( matChanger );
+                // gui.add( effectController, "maxblur", 0.0, 5.0, 0.025 ).onChange( matChanger );
+
+                // gui.add( effectController, "showFocus" ).onChange( matChanger );
+                // gui.add( effectController, "manualdof" ).onChange( matChanger );
+                // gui.add( effectController, "vignetting" ).onChange( matChanger );
+
+                // gui.add( effectController, "depthblur" ).onChange( matChanger );
+
+                // gui.add( effectController, "threshold", 0, 1, 0.001 ).onChange( matChanger );
+                // gui.add( effectController, "gain", 0, 100, 0.001 ).onChange( matChanger );
+                // gui.add( effectController, "bias", 0,3, 0.001 ).onChange( matChanger );
+                // gui.add( effectController, "fringe", 0, 5, 0.001 ).onChange( matChanger );
+
+                // gui.add( effectController, "focalLength", 16, 80, 0.001 ).onChange( matChanger )
+
+                // gui.add( effectController, "noise" ).onChange( matChanger );
+
+                // gui.add( effectController, "dithering", 0, 0.001, 0.0001 ).onChange( matChanger );
+
+                // gui.add( effectController, "pentagon" ).onChange( matChanger );
+
+                // gui.add( shaderSettings, "rings", 1, 8).step(1).onChange( shaderUpdate );
+                // gui.add( shaderSettings, "samples", 1, 13).step(1).onChange( shaderUpdate );
+
+                // matChanger();
+
+                window.addEventListener( 'resize', onWindowResize, false );
+
+            },
              onWindowResize = function() {
 
                 windowHalfX = window.innerWidth / 2;
@@ -156,8 +204,8 @@ var PARTICLES = (function() {
             //
 
              animate = function() {
-
-                requestAnimationFrame( animate );
+                //bw debugging
+                // requestAnimationFrame( animate );
 
                 render();
                 stats.update();

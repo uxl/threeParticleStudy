@@ -6,7 +6,8 @@
     "modernizr": "~2.8.3",
     "three.js": "threejs#*",
     "threejs-stats": "*",
-    "tween.js": "tweenjs#~16.3.1"
+    "tween.js": "tweenjs#~16.3.1",
+    "dat.gui": "*"
   },
   "overrides": {
     "bootstrap-sass": {
