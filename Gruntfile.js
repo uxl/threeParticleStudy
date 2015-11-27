@@ -33,6 +33,8 @@ module.exports = function(grunt) {
     config: config,
 
 buildcontrol: {
+    //deploys to gh-pages
+    buildcontrol: {
       options: {
         dir: 'dist',
         commit: true,
@@ -43,6 +45,12 @@ buildcontrol: {
         options: {
           remote: 'git@github.com:uxl/xmasscard.git',
           branch: 'gh-pages'
+      }
+    },
+      heroku: {
+        options: {
+          remote: 'git@heroku.com:dry-chamber-1376.git',
+          branch: 'master'
         }
       }
     },
@@ -405,6 +413,7 @@ buildcontrol: {
 
     if (target === 'dist') {
       return grunt.task.run(['build', 'browserSync:dist']);
+
     }
 
     grunt.task.run([
@@ -416,13 +425,14 @@ buildcontrol: {
       'watch'
     ]);
   });
+
+  grunt.registerTask('deploy', ['buildcontrol']);
+
   grunt.registerTask('server', function(target) {
     grunt.log.warn('The `server` task has been deprecated. Use `grunt serve` to start a server.');
     grunt.task.run([target ? ('serve:' + target) : 'serve']);
   });
   
-grunt.registerTask('deploy', ['buildcontrol']);
-
   grunt.registerTask('test', function(target) {
     if (target !== 'watch') {
       grunt.task.run([
