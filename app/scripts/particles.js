@@ -19,6 +19,7 @@ var PARTICLES = (function() {
         mouseY = 0,
         windowHalfX = window.innerWidth / 2,
         windowHalfY = window.innerHeight / 2,
+        particleSpeed = 100000,
 
             init = function() {
                 console.log('PARTICLES.init called');
@@ -70,17 +71,16 @@ var PARTICLES = (function() {
             addGui = function(){
                 var gui = new dat.GUI();
                 var params = {
-                    interation: 5000,
-                    cameraposZ: 1000
+                    cameraposZ: 1000,
+                    partSpeed: particleSpeed
                 };
-                gui.add(params, 'interation').min(0).max(5000).step(1).onFinishChange(function(){
-                    // refresh based on the new value of params.interation
-                    console.log(params.interation);
-                });
                 gui.add(params, 'cameraposZ').min(0).max(5000).step(1).onFinishChange(function(){
                     // refresh based on the new value of params.interation
-                    console.log(params.cameraposZ);
                     camera.position.z = params.cameraposZ;
+                });
+                gui.add(params, 'partSpeed').min(0).max(200000).step(1000).onFinishChange(function(){
+                    // refresh based on the new value of params.interation
+                    particleSpeed = params.partSpeed;
                 });
                 //gui.add( effectController, "threshold", 0, 1, 0.001 ).onChange( matChanger );
 
@@ -139,10 +139,10 @@ var PARTICLES = (function() {
 
                 var context = canvas.getContext( '2d' );
                 var gradient = context.createRadialGradient( canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2 );
-                gradient.addColorStop( 0, 'rgba(255,255,255,1)' );
-                gradient.addColorStop( 0.2, 'rgba(0,255,255,1)' );
-                gradient.addColorStop( 0.4, 'rgba(0,0,64,1)' );
-                gradient.addColorStop( 1, 'rgba(0,0,0,1)' );
+                gradient.addColorStop( 0, 'rgba(255,255,100,0.5)' );
+                gradient.addColorStop( 0.2, 'rgba(255,255,100,0.5)' );
+                gradient.addColorStop( 0.8, 'rgba(255,255,100,0.5)' );
+                gradient.addColorStop( 1, 'rgba(255,255,100,0)' );
 
                 context.fillStyle = gradient;
                 context.fillRect( 0, 0, canvas.width, canvas.height );
@@ -155,8 +155,11 @@ var PARTICLES = (function() {
 
                 var particle = this instanceof THREE.Sprite ? this : particle;
                 var delay = delay !== undefined ? delay : 0;
+                var randomx = Math.random()*windowHalfX;
+                var randomy = Math.random()*windowHalfY;
+                var randomz = Math.random()*2000;
 
-                particle.position.set( 0, 0, 0 );
+                particle.position.set( randomx, randomy, randomz );
                 particle.scale.x = particle.scale.y = Math.random() * 32 + 16;
 
                 new TWEEN.Tween( particle )
@@ -167,7 +170,7 @@ var PARTICLES = (function() {
 
                 new TWEEN.Tween( particle.position )
                     .delay( delay )
-                    .to( { x: Math.random() * 4000 - 2000, y: Math.random() * 1000 - 500, z: Math.random() * 4000 - 2000 }, 10000 )
+                    .to( { x: Math.random() * 4000 - 2000, y: Math.random() * 1000 - 500, z: Math.random() * 4000 - 2000 }, particleSpeed )
                     .start();
 
                 new TWEEN.Tween( particle.scale )
