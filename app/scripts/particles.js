@@ -1,5 +1,9 @@
 /* global console, PARTICLES */
-//reference http://jabtunes.com/labs/3d/dof/webgl_postprocessing_dof2.html
+
+//todo:
+//complete rigging gui.dat
+//pull in bokeh from this reference:
+//http://jabtunes.com/labs/3d/dof/webgl_postprocessing_dof2.html
 
 'use strict';
 
@@ -18,7 +22,7 @@ var PARTICLES = (function() {
 
             init = function() {
                 console.log('PARTICLES.init called');
-                debugger;
+                //debugger;
 
                 container = document.createElement( 'div' );
                 container.id = "particles";
@@ -204,8 +208,7 @@ var PARTICLES = (function() {
             //
 
              animate = function() {
-                //bw debugging
-                // requestAnimationFrame( animate );
+                requestAnimationFrame( animate );
 
                 render();
                 stats.update();
