@@ -70,12 +70,18 @@ var PARTICLES = (function() {
             addGui = function(){
                 var gui = new dat.GUI();
                 var params = {
-                    interation: 5000
+                    interation: 5000,
+                    cameraposZ: 1000
                 };
-                gui.add(params, 'interation').onFinishChange(function(){
+                gui.add(params, 'interation').min(0).max(5000).step(1).onFinishChange(function(){
                     // refresh based on the new value of params.interation
-                    console.log('######' + iteration);
-                })
+                    console.log(params.interation);
+                });
+                gui.add(params, 'cameraposZ').min(0).max(5000).step(1).onFinishChange(function(){
+                    // refresh based on the new value of params.interation
+                    console.log(params.cameraposZ);
+                    camera.position.z = params.cameraposZ;
+                });
                 //gui.add( effectController, "threshold", 0, 1, 0.001 ).onChange( matChanger );
 
                 // gui.add( effectController, "enabled" ).onChange( matChanger );
