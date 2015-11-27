@@ -4,7 +4,9 @@
   "dependencies": {
     "bootstrap-sass": "~3.3.5",
     "modernizr": "~2.8.3",
-    "three.js": "threejs#*"
+    "three.js": "threejs#*",
+    "threejs-stats": "*",
+    "tween.js": "tweenjs#~16.3.1"
   },
   "overrides": {
     "bootstrap-sass": {

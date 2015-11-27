@@ -28,7 +28,7 @@
     <![endif]-->
 
     
-    <div class="container">
+    <!-- <div class="container">
       <div class="header">
         <ul class="nav nav-pills pull-right">
           <li class="active"><a href="#">Home</a></li>
@@ -43,24 +43,18 @@
         <p class="lead">Always a pleasure scaffolding your apps.</p>
         <p><a class="btn btn-lg btn-success" href="#">Splendid! <span class="glyphicon glyphicon-ok"></span></a></p>
       </div>
-
-      <div class="row marketing">
-        <div class="col-lg-6">
-          <div id="container">particles go here</div>
-          
-        </div>
-      </div>
-
       <div class="footer">
         <p><span class="glyphicon glyphicon-heart"></span> from the Yeoman team</p>
       </div>
-    </div>
+    </div> -->
     
 
     <!-- build:js(.) scripts/vendor.js -->
     <!-- bower:js -->
     <script src="/bower_components/jquery/dist/jquery.js"></script>
     <script src="/bower_components/three.js/build/three.js"></script>
+    <script src="/bower_components/threejs-stats/Stats.js"></script>
+    <script src="/bower_components/tween.js/src/Tween.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
 
@@ -83,6 +77,10 @@
 
     <!-- build:js scripts/main.js -->
     <script src="scripts/main.js"></script>
+    <script src="../bower_components/three.js/examples/js/renderers/CanvasRenderer.js"></script>
+    <script src="../bower_components/three.js/examples/js/renderers/Projector.js"></script>
+
+
     <script src="scripts/particles.js"></script>
     <!-- endbuild -->
 

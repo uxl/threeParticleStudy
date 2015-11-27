@@ -1,86 +1,181 @@
-/* global console, jQuery, $, PARTICLES */
+/* global console, PARTICLES */
 
 'use strict';
 
-var PARTICLES = (function($) {
+var PARTICLES = (function() {
     //vars
-    // set the scene size
-    var WIDTH = 400,
-        HEIGHT = 300,
+    var container,
+        stats,
+        camera,
+        scene,
+        renderer,
+        particle,
+        mouseX = 0,
+        mouseY = 0,
+        windowHalfX = window.innerWidth / 2,
+        windowHalfY = window.innerHeight / 2,
 
-        particleCount = 1800,
+            init = function() {
+                console.log('PARTICLES.init called');
 
-        // // set some camera attributes
-        VIEW_ANGLE = 45,
-        ASPECT = WIDTH / HEIGHT,
-        NEAR = 0.1,
-        FAR = 10000,
-        camera = null,
-        renderer = null,
-        scene = null,
-        pCloud = null,
-        pMaterial = null, 
+                container = document.createElement( 'div' );
+                document.body.appendChild( container );
 
-        // // get the DOM element to attach to
-        // // - assume we've got jQuery to hand
-        $container = $('#container'),
+                camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 5000 );
+                camera.position.z = 1000;
 
-        // imagesrc = "",
-        init = function() {
-            console.log('PARTICLES.init called');
+                scene = new THREE.Scene();
 
-            // // create a WebGL renderer, camera
-            // // and a scene
-            renderer = new THREE.WebGLRenderer();
-            camera = new THREE.Camera(VIEW_ANGLE,
-                ASPECT,
-                NEAR,
-                FAR),
-            scene = new THREE.Scene();
+                var material = new THREE.SpriteMaterial( {
+                    map: new THREE.CanvasTexture( generateSprite() ),
+                    blending: THREE.AdditiveBlending
+                } );
 
-            // // the camera starts at 0,0,0 so pull it back
-            camera.position.z = 300,
+                for ( var i = 0; i < 1000; i++ ) {
 
-            // // attach the render-supplied DOM element
-            $container.append(renderer.domElement);
+                    particle = new THREE.Sprite( material );
 
-            pCloud = new THREE.Geometry();
-            pMaterial = new THREE.ParticleBasicMaterial({
-                color: 0xFFFFFF,
-                size: 20
-            });
-        
-            // // start the renderer - set the clear colour
-            // // to a full black
-            renderer.setClearColor(new THREE.Color(0, 1));
-            renderer.setSize(WIDTH, HEIGHT);
+                    initParticle( particle, i * 10 );
 
-            // now create the individual particles
-            for (var p = 0; p < particleCount; p++) {
-                // create a particle with random
-                // position values, -250 -> 250
-                var pX = Math.random() * 500 - 250,
-                    pY = Math.random() * 500 - 250,
-                    pZ = Math.random() * 500 - 250,
-                    particle = new THREE.Vector3(pX, pY, pZ);
+                    scene.add( particle );
+                }
 
-                // add it to the geometry
-                pCloud.vertices.push(particle);
+                renderer = new THREE.CanvasRenderer();
+                renderer.setClearColor( 0x000040 );
+                renderer.setPixelRatio( window.devicePixelRatio );
+                renderer.setSize( window.innerWidth, window.innerHeight );
+                container.appendChild( renderer.domElement );
+
+                stats = new Stats();
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.top = '0px';
+                container.appendChild( stats.domElement );
+
+                document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+                document.addEventListener( 'touchstart', onDocumentTouchStart, false );
+                document.addEventListener( 'touchmove', onDocumentTouchMove, false );
+
+                //
+
+                window.addEventListener( 'resize', onWindowResize, false );
+                animate();
+            },
+
+             onWindowResize = function() {
+
+                windowHalfX = window.innerWidth / 2;
+                windowHalfY = window.innerHeight / 2;
+
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize( window.innerWidth, window.innerHeight );
+
+            },
+
+             generateSprite = function() {
+
+                var canvas = document.createElement( 'canvas' );
+                canvas.width = 16;
+                canvas.height = 16;
+
+                var context = canvas.getContext( '2d' );
+                var gradient = context.createRadialGradient( canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2 );
+                gradient.addColorStop( 0, 'rgba(255,255,255,1)' );
+                gradient.addColorStop( 0.2, 'rgba(0,255,255,1)' );
+                gradient.addColorStop( 0.4, 'rgba(0,0,64,1)' );
+                gradient.addColorStop( 1, 'rgba(0,0,0,1)' );
+
+                context.fillStyle = gradient;
+                context.fillRect( 0, 0, canvas.width, canvas.height );
+
+                return canvas;
+
+            },
+
+             initParticle = function( particle, delay ) {
+
+                var particle = this instanceof THREE.Sprite ? this : particle;
+                var delay = delay !== undefined ? delay : 0;
+
+                particle.position.set( 0, 0, 0 );
+                particle.scale.x = particle.scale.y = Math.random() * 32 + 16;
+
+                new TWEEN.Tween( particle )
+                    .delay( delay )
+                    .to( {}, 10000 )
+                    .onComplete( initParticle )
+                    .start();
+
+                new TWEEN.Tween( particle.position )
+                    .delay( delay )
+                    .to( { x: Math.random() * 4000 - 2000, y: Math.random() * 1000 - 500, z: Math.random() * 4000 - 2000 }, 10000 )
+                    .start();
+
+                new TWEEN.Tween( particle.scale )
+                    .delay( delay )
+                    .to( { x: 0.01, y: 0.01 }, 10000 )
+                    .start();
+
+            },
+
+            //
+
+             onDocumentMouseMove = function( event ) {
+
+                mouseX = event.clientX - windowHalfX;
+                mouseY = event.clientY - windowHalfY;
+            },
+
+             onDocumentTouchStart = function( event ) {
+
+                if ( event.touches.length == 1 ) {
+
+                    event.preventDefault();
+
+                    mouseX = event.touches[ 0 ].pageX - windowHalfX;
+                    mouseY = event.touches[ 0 ].pageY - windowHalfY;
+
+                }
+
+            },
+
+             onDocumentTouchMove = function( event ) {
+
+                if ( event.touches.length == 1 ) {
+
+                    event.preventDefault();
+
+                    mouseX = event.touches[ 0 ].pageX - windowHalfX;
+                    mouseY = event.touches[ 0 ].pageY - windowHalfY;
+
+                }
+
+            },
+
+            //
+
+             animate = function() {
+
+                requestAnimationFrame( animate );
+
+                render();
+                stats.update();
+
+            },
+
+             render = function() {
+
+                TWEEN.update();
+
+                camera.position.x += ( mouseX - camera.position.x ) * 0.05;
+                camera.position.y += ( - mouseY - camera.position.y ) * 0.05;
+                camera.lookAt( scene.position );
+
+                renderer.render( scene, camera );
+
             }
-
-            // create the particle system
-            // var particleSystem = new THREE.ParticleSystem(
-            //     pCloud,
-            //     pMaterial);
-
-            // add it to the scene
-            //scene.addChild(particleSystem);
-        },
-        reset = function() {
-
-        };
     return {
-        init: init,
-        reset: reset
+        init: init
     };
-}(jQuery));
+}());
