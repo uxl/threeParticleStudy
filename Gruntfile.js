@@ -15,7 +15,9 @@ module.exports = function(grunt) {
 
   // Automatically load required grunt tasks
   require('jit-grunt')(grunt, {
-    useminPrepare: 'grunt-usemin'
+    useminPrepare: 'grunt-usemin',
+    // translate buildcontrol to use the 'grunt-build-control' plugin
+    buildcontrol: 'grunt-build-control'
   });
 
   // Configurable paths
@@ -29,6 +31,28 @@ module.exports = function(grunt) {
 
     // Project settings
     config: config,
+
+    //deploys to gh-pages
+    buildcontrol: {
+      options: {
+        dir: 'dist',
+        commit: true,
+        push: true,
+        message: 'Built %sourceName% from commit %sourceCommit% on branch %sourceBranch%'
+      },
+      pages: {
+        options: {
+        remote: 'git@github.com:uxl/xmasscard.git',
+        branch: 'gh-pages'
+      }
+    },
+      heroku: {
+        options: {
+          remote: 'git@heroku.com:dry-chamber-1376.git',
+          branch: 'master'
+        }
+      }
+    },
 
     // Watches files for changes and runs tasks based on the changed files
     watch: {
@@ -380,33 +404,6 @@ module.exports = function(grunt) {
         'imagemin',
         'svgmin'
       ]
-    },
-    buildcontrol: {
-      options: {
-        dir: 'dist',
-        commit: true,
-        push: true,
-        message: 'Built %sourceName% from commit %sourceCommit% on branch %sourceBranch%'
-      },
-      pages: {
-        options: {
-          remote: 'git@github.com:uxl/xmasscard.git',
-          branch: 'gh-pages'
-        }
-      },
-      heroku: {
-        options: {
-          remote: 'git@heroku.com:example-heroku-webapp-1988.git',
-          branch: 'master',
-          tag: pkg.version
-        }
-      },
-      local: {
-        options: {
-          remote: '../',
-          branch: 'build'
-        }
-      }
     }
   });
 
@@ -415,6 +412,7 @@ module.exports = function(grunt) {
 
     if (target === 'dist') {
       return grunt.task.run(['build', 'browserSync:dist']);
+
     }
 
     grunt.task.run([
@@ -426,6 +424,9 @@ module.exports = function(grunt) {
       'watch'
     ]);
   });
+
+  grunt.registerTask('deploy', ['buildcontrol']);
+
   grunt.registerTask('server', function(target) {
     grunt.log.warn('The `server` task has been deprecated. Use `grunt serve` to start a server.');
     grunt.task.run([target ? ('serve:' + target) : 'serve']);
@@ -459,9 +460,10 @@ module.exports = function(grunt) {
     'modernizr',
     'filerev',
     'usemin',
-    'htmlmin',
-    'buildcontrol:pages'
+    'htmlmin'
   ]);
+
+
 
   grunt.registerTask('default', [
     'newer:eslint',
