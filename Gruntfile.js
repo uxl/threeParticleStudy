@@ -45,12 +45,6 @@ module.exports = function(grunt) {
               remote: 'git@github.com:uxl/xmasscard.git',
               branch: 'gh-pages'
             }
-          },
-          heroku: {
-            options: {
-              remote: 'git@heroku.com:dry-chamber-1376.git',
-              branch: 'master'
-            }
           }
         },
 
