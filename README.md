@@ -1,10 +1,3 @@
-Yo Webapp scaffold with buildcontrol deploy to gh-pages
-	
-## Dependancies
-Yoeman
-
-	clone 
-
 # README for XMASS CARD
 
 Yo Webapp scaffold with buildcontrol deploy to gh-pages
@@ -30,19 +23,6 @@ $ grunt wiredep
 $grunt build
 $grunt deploy
 ```
-
-## Tech Stack
-
-### Livereload
-
-### Routes
-
-### JS patterns
-
-### SCSS
-
-#Tools/Process
-
 
 #Build Tools
 
