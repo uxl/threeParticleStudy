@@ -20,6 +20,7 @@ var PARTICLES = (function() {
         windowHalfX = window.innerWidth / 2,
         windowHalfY = window.innerHeight / 2,
         particleSpeed = 100000,
+        particleSpread = 1000,
 
             init = function() {
                 console.log('PARTICLES.init called');
@@ -72,7 +73,8 @@ var PARTICLES = (function() {
                 var gui = new dat.GUI();
                 var params = {
                     cameraposZ: 1000,
-                    partSpeed: particleSpeed
+                    partSpeed: particleSpeed,
+                    partSpread: particleSpread
                 };
                 gui.add(params, 'cameraposZ').min(0).max(5000).step(1).onFinishChange(function(){
                     // refresh based on the new value of params.interation
@@ -81,6 +83,10 @@ var PARTICLES = (function() {
                 gui.add(params, 'partSpeed').min(0).max(200000).step(1000).onFinishChange(function(){
                     // refresh based on the new value of params.interation
                     particleSpeed = params.partSpeed;
+                });
+                gui.add(params, 'partSpread').min(0).max(5000).step(250).onFinishChange(function(){
+                    // refresh based on the new value of params.interation
+                    particleSpread = params.partSpread;
                 });
                 //gui.add( effectController, "threshold", 0, 1, 0.001 ).onChange( matChanger );
 
@@ -155,9 +161,9 @@ var PARTICLES = (function() {
 
                 var particle = this instanceof THREE.Sprite ? this : particle;
                 var delay = delay !== undefined ? delay : 0;
-                var randomx = Math.random()*windowHalfX;
-                var randomy = Math.random()*windowHalfY;
-                var randomz = Math.random()*2000;
+                var randomx = (Math.random()*particleSpread) - windowHalfX;
+                var randomy = (Math.random()*particleSpread) - windowHalfY;
+                var randomz = Math.random()*particleSpread;
 
                 particle.position.set( randomx, randomy, randomz );
                 particle.scale.x = particle.scale.y = Math.random() * 32 + 16;
