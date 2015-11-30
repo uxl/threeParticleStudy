@@ -15,8 +15,8 @@ $ grunt wiredep
 
 ## Development
 1. `git clone git@github.com:uxl/xmasscard.git`
-2. `npm install` will install dependencies and trigger a production build.
-3. `grunt && grunt server` will build and initiate watch along with Livereload
+2. `bower install` will install dependencies.
+3. `grunt server` will build and initiate watch along with Livereload
 
 ## Deployment
 ``` sh
@@ -30,3 +30,7 @@ $grunt deploy
 * Yeoman
 * Yeoman Webapp-Generator
 * Bower
+
+##Contributing
+
+Features and fixes should be submitted as a Pull Request. These will be reviewed and merged as they are ready.
