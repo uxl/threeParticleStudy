@@ -8,8 +8,8 @@ Yo Webapp scaffold with buildcontrol deploy to gh-pages
 
 Third-party dependencies are managed with [grunt-wiredep](https://github.com/stephenplusplus/grunt-wiredep). Add new dependencies using **Bower** and then run the **Grunt** task to load them:
 
-####install node and npm - recipe is no SUDO install of node
-```
+#####install node and npm - recipe is no SUDO version of node
+1. ```
 brew install node --without-npm
 mkdir "${HOME}/.npm-packages"
 echo NPM_PACKAGES="${HOME}/.npm-packages" >> ${HOME}/.bashrc
@@ -20,9 +20,8 @@ echo PATH=\"\$NPM_PACKAGES/bin:\$PATH\" >> ${HOME}/.bashrc
 echo source "~/.bashrc" >> ${HOME}/.bash_profile
 source ~/.bashrc
 ```
-
-`npm install -g bower` install bower
-`npm install -g grunt-cli` install grunt command line ( might need sudo )
+2. `npm install -g bower` install bower
+3. `npm install -g grunt-cli` install grunt command line ( might need sudo )
 
 ## Development
 1. `git clone git@github.com:uxl/xmasscard.git`
