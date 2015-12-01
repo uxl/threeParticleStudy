@@ -1,496 +1,512 @@
-/* global console, PARTICLES */
-
-//todo:
-//complete rigging gui.dat
-//pull in bokeh from this reference:
-//http://jabtunes.com/labs/3d/dof/webgl_postprocessing_dof2.html
-
-'use strict';
-
-var PARTICLES = (function() {
-    //vars
-    var container,
-        stats,
-        camera,
-        scene,
-        renderer,
-        particle,
-        mouseX = 0,
-        mouseY = 0,
-        windowHalfX = window.innerWidth / 2,
-        windowHalfY = window.innerHeight / 2,
-        resetMe = false,
-        gui = null,
-        context = null,
-        canvas = null,
-        geometry = null,
-        testbox = null,
-
-        //particle init values
-        settings = {
-            speed: 100000,
-            spread: 1000,
-            number: 280,
-            maxSize: 32,
-            minSize: 16,
-            symbol: 0,
-            focus: 50,
-            hue: 280,
-            saturation: 40,
-            width: 1920,
-            height: 1080,
-            aspect: 1,
-        },
-
-        init = function() {
-            console.log('PARTICLES.init called');
-            //debugger;
-
-            //add dom elements
-            container = document.createElement('div');
-            container.id = "particles";
-            document.body.appendChild(container);
-
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 5000);
-            //debugger;
-            camera.fov = 50;
-            camera.position.z = 1000;
-            camera.focus = settings.focus;
-            camera.aspect = settings.aspect;
-
-            scene = new THREE.Scene();
-
-            //places particles on stage
-            createParticles();
-
-            renderer = new THREE.CanvasRenderer();
-            renderer.setClearColor(0x000000);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            container.appendChild(renderer.domElement);
-
-            stats = new Stats();
-            stats.domElement.style.position = 'absolute';
-            stats.domElement.style.top = '0px';
-            container.appendChild(stats.domElement);
-
-            document.addEventListener('mousemove', onDocumentMouseMove, false);
-            document.addEventListener('touchstart', onDocumentTouchStart, false);
-            document.addEventListener('touchmove', onDocumentTouchMove, false);
-
-            window.addEventListener('resize', onWindowResize, false);
-            animate();
-            addGui();
-
-            //geometry
-            geometry = new THREE.PlaneGeometry(window.innerWidth*3 , window.innerHeight*3, 200);
-
-            var loader = new THREE.TextureLoader();
-            loader.load('images/night.jpg', function(texture) {
-
-                //var geometry = new THREE.SphereGeometry( 200, 20, 20 );
-
-                var material = new THREE.MeshBasicMaterial({
-                    map: texture,
-                                    side: THREE.FrontSide,
-
-                    overdraw: false
-                });
-                var mesh = new THREE.Mesh(geometry, material);
-                scene.add(mesh);
-                //raycaster = new THREE.Raycaster();
-            });
-
-            // var texture = texture = THREE.TextureLoader( 'images/night.jpg' );
-            //var imageMat = new THREE.MeshBasicMaterial( {color:0xffffff, map: texture } );
-
-            //console.log('1 -- ' + scene);
-            //console.log('2 -- ' + scene.children);
-            //console.log('3 -- ' + scene.getObjectByName('part1', true))
-        },
-        createParticles = function() {
-            var material = new THREE.SpriteMaterial({
-                map: new THREE.CanvasTexture(generateSprite()),
-                blending: THREE.AdditiveBlending
-            });
-
-            for (var i = 0; i < settings.number; i++) {
-                //console.log('creating: ' + i);
-                particle = new THREE.Sprite(material);
-
-                particle.name = "part" + i;
-
-                initParticle(particle, i * 10);
-                scene.add(particle);
-            }
-        },
-        removeParticles = function() {
-            resetMe = true;
-            //console.log('PARTICLES.reset called');
-            render();
-            var parent = document.getElementsByTagName("BODY")[0];
-
-            for (var i = 0; i < settings.number; i++) {
-                console.log('removing: ' + i);
-                var me = scene.getObjectByName('part' + i);
-                scene.remove(me);
-            }
-            render();
-        },
-        bokeh = function(x, y, scale, symbol, verticies, randomRotation, rotation) {
-            console.log("bokeh: " + scale);
-            context.shadowBlur = scale / settings.minsize * (Math.random() * 9.9 + 0.1);
-
-            context.strokeStyle = "rgba(0, 0, 0, 0.5)";
-            context.fillStyle = "rgba(0, 0, 0, 0.3)";
-
-            context.save();
-            context.translate(x, y + settings.height);
-            context.beginPath();
-            switch (parseInt(symbol)) {
-                case 0:
-                    context.arc(0, 0, scale, 0, 2 * Math.PI);
-                    break;
-                case 1:
-                    polygon(scale, verticies, randomRotation, rotation);
-                    break;
-                case 2:
-                    nstar(scale, verticies, randomRotation, rotation);
-                    break;
-                case 3:
-                    heart(scale, randomRotation, rotation);
-                    break;
-            }
-            context.fill();
-            context.stroke();
-            context.restore();
-
-
-        },
-        polygon = function(scale, verticies, randomRotation, rotation) {
-            a = 2 * Math.PI / verticies;
-
-            context.rotate(randomRotation * (1 - 2 * Math.random()) * Math.PI + a / 2 + rotation);
-
-            context.moveTo(0, scale);
-            for (var i = 0; i < verticies; i++) {
-                context.rotate(a);
-                context.lineTo(0, scale);
-            }
-        },
-        nstar = function(scale, verticies, randomRotation, rotation) {
-            a = 2 * Math.PI / verticies;
-
-            context.rotate(randomRotation * (1 - 2 * Math.random()) * Math.PI + a / 2 + rotation);
-
-            context.moveTo(0, r);
-            for (var i = 0; i < 2 * verticies; i++) {
-                context.rotate(a / 2);
-                context.lineTo(0, scale - (i % 2 == 0) * 2 * scale / 3);
-            }
-        },
-        heart = function(scale, randomRotation, rotation) {
-            context.rotate(randomRotation * (1 - 2 * Math.random()) * Math.PI + rotation);
-
-            context.moveTo(0, 3 * scale / 2);
-            context.arc(-scale / 2, 0, scale / 2, 3 * Math.PI / 4, 0);
-            context.arc(scale / 2, 0, scale / 2, Math.PI, Math.PI / 4);
-            context.lineTo(0, 3 * scale / 2);
-        },
-        onWindowResize = function() {
-
-            windowHalfX = window.innerWidth / 2;
-            windowHalfY = window.innerHeight / 2;
-
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-
-            renderer.setSize(window.innerWidth, window.innerHeight);
-
-        },
-        generateSprite = function() {
-
-            var canvas = document.createElement('canvas');
-            canvas.width = 200;
-            canvas.height = 200;
-
-            var context = canvas.getContext('2d');
-
-            context.fillStyle = "000";
-            context.globalCompositeOperation = 'source-over';
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            context.globalCompositeOperation = 'lighter';
-            context.lineWidth = 3;
-            context.shadowColor = "hsl(0, 0%, 50%)";
-            context.shadowOffsetY = -settings.height;
-
-            // var gradient = context.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2);
-            // gradient.addColorStop(0, 'rgba(255,255,100,0.5)');
-            // gradient.addColorStop(0.2, 'rgba(255,255,100,0.5)');
-            // gradient.addColorStop(0.8, 'rgba(255,255,100,0.5)');
-            // gradient.addColorStop(1, 'rgba(255,255,100,0)');
-
-            context.fillStyle = 'white';
-            context.fillRect(0, 0, canvas.width, canvas.height);
-
-            return canvas;
-
-        },
-        initParticle = function(particle, delay) {
-
-            var particle = this instanceof THREE.Sprite ? this : particle;
-            var delay = delay !== undefined ? delay : 0;
-            var randomx = (Math.random() * settings.spread) - windowHalfX;
-            var randomy = (Math.random() * settings.spread) - windowHalfY;
-            var randomz = Math.random() * settings.spread;
-
-            particle.position.set(randomx, randomy, randomz);
-            particle.scale.x = particle.scale.y = Math.random() * settings.maxSize + settings.minSize;
-
-            new TWEEN.Tween(particle)
-                .delay(delay)
-                .to({}, 10000)
-                .onComplete(initParticle)
-                .start();
-
-            new TWEEN.Tween(particle.position)
-                .delay(delay)
-                .to({
-                    x: Math.random() * 4000 - 2000,
-                    y: Math.random() * 1000 - 500,
-                    z: Math.random() * 4000 - 2000
-                }, settings.speed)
-                .start();
-
-            new TWEEN.Tween(particle.scale)
-                .delay(delay)
-                .to({
-                    x: 0.01,
-                    y: 0.01
-                }, 10000)
-                .start();
-
-        },
-
-        //
-
-        onDocumentMouseMove = function(event) {
-
-            mouseX = event.clientX - windowHalfX;
-            mouseY = event.clientY - windowHalfY;
-        },
-
-        onDocumentTouchStart = function(event) {
-
-            if (event.touches.length == 1) {
-
-                event.preventDefault();
-
-                mouseX = event.touches[0].pageX - windowHalfX;
-                mouseY = event.touches[0].pageY - windowHalfY;
-
-            }
-
-        },
-
-        onDocumentTouchMove = function(event) {
-
-            if (event.touches.length == 1) {
-
-                event.preventDefault();
-
-                mouseX = event.touches[0].pageX - windowHalfX;
-                mouseY = event.touches[0].pageY - windowHalfY;
-
-            }
-        },
-
-        animate = function() {
-            // console.log('PARTICLES.animate');
-            if (resetMe == true) {
-                resetMe = false;
-            } else {
-                requestAnimationFrame(animate);
-
-                render();
-                stats.update();
-            }
-        },
-
-        render = function() {
-
-            TWEEN.update();
-
-            camera.position.x += (mouseX - camera.position.x) * 0.05;
-            camera.position.y += (-mouseY - camera.position.y) * 0.05;
-            camera.lookAt(scene.position);
-
-            renderer.render(scene, camera);
-
-        },
-        resetScene = function() {
-            removeParticles();
-            createParticles();
-            animate();
-        },
-        addGui = function() {
-
-            console.log("PARTICLES.addGui")
-            gui = new dat.GUI();
-            var params = {
-                zoom: 1000,
-                speed: settings.speed,
-                spread: settings.spread,
-                number: settings.number,
-                max_size: settings.maxSize,
-                min_size: settings.minSize,
-                symbol: settings.symbol,
-                focus: settings.focus,
-                reset: resetScene,
-                hue: settings.hue,
-                saturation: settings.saturation,
-                aspect: settings.aspect
-            };
-            gui.add(params, "symbol", {
-                circle: 0,
-                polygon: 1,
-                star: 2,
-                hearts: 3
-            }).onFinishChange(function() {
-                // refresh based on the new value of params.interation
-                removeParticles();
-                settings.symbol = params.symbol;
-                createParticles();
-                render();
-                animate();
-            });
-            gui.add(params, 'zoom').min(0).max(5000).step(1).onChange(function() {
-                // refresh based on the new value of params.interation
-                camera.position.z = params.zoom;
-            });
-            gui.add(params, 'speed').min(0).max(100000).step(1000).onFinishChange(function() {
-                // refresh based on the new value of params.interation
-                removeParticles();
-                settings.speed = params.speed;
-                createParticles();
-                render();
-                animate();
-            });
-            gui.add(params, 'spread').min(0).max(5000).step(250).onFinishChange(function() {
-                // refresh based on the new value of params.interation
-                removeParticles();
-                settings.spread = params.spread;
-                createParticles();
-                render();
-                animate();
-            });
-            gui.add(params, 'number').min(0).max(2000).step(1).onFinishChange(function() {
-                // refresh based on the new value of params.interation
-                removeParticles();
-                settings.number = params.number;
-                createParticles();
-                render();
-                animate();
-            });
-            gui.add(params, 'max_size').min(0).max(200).step(2).onFinishChange(function() {
-                // refresh based on the new value of params.interation
-                removeParticles();
-                settings.maxSize = params.max_size;
-                createParticles();
-                render();
-                animate();
-
-            });
-            gui.add(params, 'min_size').min(0).max(200).step(2).onFinishChange(function() {
-                // refresh based on the new value of params.interation
-                removeParticles();
-                settings.minSize = params.min_size;
-                createParticles();
-                render();
-                animate();
-            });
-            gui.add(params, "focus").min(0).max(1000).step(100).onFinishChange(function() {
-                //refresh shaderfocus
-                settings.focus = params.focus;
-                camera.focus = settings.focus;
-            });
-             gui.add(params, "aspect").min(0).max(22).step(1).onFinishChange(function() {
-                //refresh shaderfocus
-                settings.aspect = params.aspect;
-                camera.focus = settings.focus;
-            });
-            gui.add(params, "hue", 0, 360).onFinishChange(function() {
-                alert('future feature');
-            });
-            gui.add(params, "saturation", 0, 100).onFinishChange(function() {
-                alert('future feature');
-            });
-
-            gui.add(params, "reset");
-
-            window.addEventListener('resize', onWindowResize, false);
-
-
-        },
-        // RGB and HSL functions from
-        // https://gist.github.com/mjijackson/5311256
-        RTH = function(r, g, b) {
-            r /= 255, g /= 255, b /= 255;
-            var max = Math.max(r, g, b),
-                min = Math.min(r, g, b);
-            var h, s, l = (max + min) / 2;
-            if (max == min) {
-                h = s = 0;
-            } else {
-                var d = max - min;
-                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-                switch (max) {
-                    case r:
-                        h = (g - b) / d + (g < b ? 6 : 0);
-                        break;
-                    case g:
-                        h = (b - r) / d + 2;
-                        break;
-                    case b:
-                        h = (r - g) / d + 4;
-                        break;
-                }
-                h /= 6;
-            }
-            return {
-                h: h,
-                s: s,
-                l: l
-            };
-        },
-        HTR = function(h, s, l) {
-            var r, g, b;
-            if (s == 0) {
-                r = g = b = l;
-            } else {
-                function hue2rgb(p, q, t) {
-                    if (t < 0) t += 1;
-                    if (t > 1) t -= 1;
-                    if (t < 1 / 6) return p + (q - p) * 6 * t;
-                    if (t < 1 / 2) return q;
-                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-                    return p;
-                }
-                var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-                var p = 2 * l - q;
-                r = hue2rgb(p, q, h + 1 / 3);
-                g = hue2rgb(p, q, h);
-                b = hue2rgb(p, q, h - 1 / 3);
-            }
-            return {
-                r: r * 255,
-                g: g * 255,
-                b: b * 255
-            };
-        };
-    return {
-        init: init,
-        removeParticles: removeParticles,
-        scene: scene
+var container, stats;
+var camera, scene, renderer,
+    material_depth;
+
+var height = window.innerHeight;
+
+var windowHalfX = window.innerWidth / 2;
+var windowHalfY = height / 2;
+
+
+var postprocessing = {
+    enabled: true
+};
+
+var shaderSettings = {
+    rings: 3,
+    samples: 4
+};
+
+var singleMaterial = false;
+var mouse = new THREE.Vector2();
+var raycaster = new THREE.Raycaster();
+var distance = 100;
+var target = new THREE.Vector3(0, 20, -50);
+var effectController;
+var planes = [];
+var leaves = 100;
+var object = null,
+    plane = null,
+    directionalLight;
+
+init();
+animate();
+
+function init() {
+    //container  
+    container = document.createElement('div');
+    document.body.appendChild(container);
+
+    //camera
+    camera = new THREE.PerspectiveCamera(70, window.innerWidth / height, 1, 3000);
+
+    camera.position.y = window.innerHeight;
+    camera.position.z = 2000;
+
+    scene = new THREE.Scene();
+
+    //renderer
+    renderer = new THREE.WebGLRenderer({
+        antialias: false
+    });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, height);
+    renderer.sortObjects = false;
+    container.appendChild(renderer.domElement);
+
+    material_depth = new THREE.MeshDepthMaterial();
+
+    //
+
+    object = new THREE.Object3D();
+    scene.add(object);
+
+    var r = "images/";
+    var urls = [r + "posx.jpg", r + "negx.jpg",
+        r + "posy.jpg", r + "negy.jpg",
+        r + "posz.jpg", r + "negz.jpg"
+    ];
+
+    var textureCube = THREE.ImageUtils.loadTextureCube(urls);
+    textureCube.format = THREE.RGBFormat;
+
+    // Skybox
+
+    var shader = THREE.ShaderLib["cube"];
+    shader.uniforms["tCube"].value = textureCube;
+
+    var material = new THREE.ShaderMaterial({
+
+        fragmentShader: shader.fragmentShader,
+        vertexShader: shader.vertexShader,
+        uniforms: shader.uniforms,
+        depthWrite: false,
+        side: THREE.BackSide
+
+    });
+
+    mesh = new THREE.Mesh(new THREE.BoxGeometry(1000, 1000, 1000), material);
+    scene.add(mesh);
+
+
+    // Focusing Floor
+
+    // var planeGeometry = new THREE.PlaneBufferGeometry( 500, 500, 1, 1 );
+
+    // var planeMat = new THREE.MeshPhongMaterial(
+    //  {  map: texture }
+    // );
+    // var plane = new THREE.Mesh(planeGeometry, planeMat );
+    // plane.rotation.x = - Math.PI / 2;
+    // plane.position.y = - 5;
+
+    // scene.add(plane);
+
+    // Plane particles
+    var planePiece = new THREE.PlaneBufferGeometry(10, 10, 1, 1);
+
+    var planeMat = new THREE.MeshPhongMaterial({
+        color: 0xffffff * 0.4,
+        shininess: 0.5,
+        specular: 0xffffff,
+        envMap: textureCube,
+        side: THREE.DoubleSide
+    });
+
+    var rand = Math.random;
+
+    for (i = 0; i < leaves; i++) {
+        plane = new THREE.Mesh(planePiece, planeMat);
+        plane.rotation.set(rand(), rand(), rand());
+        plane.rotation.dx = rand() * 0.1;
+        plane.rotation.dy = rand() * 0.1;
+        plane.rotation.dz = rand() * 0.1;
+
+        plane.position.set(rand() * 150, 0 + rand() * 300, rand() * 150);
+        plane.position.dx = (rand() - 0.5);
+        plane.position.dz = (rand() - 0.5);
+        scene.add(plane);
+        planes.push(plane);
+    }
+
+    // Adding Monkeys
+
+    var loader2 = new THREE.JSONLoader();
+    loader2.load('images/Suzanne.js', function(geometry) {
+
+        var material = new THREE.MeshPhongMaterial({
+            color: 0xffffff,
+            specular: 0xffffff,
+            envMap: textureCube,
+            combine: THREE.MultiplyOperation,
+            shininess: 50,
+            reflectivity: 1.0
+        });
+
+        var monkeys = 20;
+
+        for (var i = 0; i < monkeys; i++) {
+
+            var mesh = new THREE.Mesh(geometry, material);
+            mesh.scale.multiplyScalar(30);
+
+
+            mesh.position.z = Math.cos(i / monkeys * Math.PI * 2) * 200;
+            mesh.position.y = Math.sin(i / monkeys * Math.PI * 3) * 20;
+            mesh.position.x = Math.sin(i / monkeys * Math.PI * 2) * 200;
+
+            mesh.rotation.x = Math.PI / 2;
+            mesh.rotation.z = -i / monkeys * Math.PI * 2;
+
+            object.add(mesh);
+
+        }
+
+    });
+
+
+
+    // Add Balls
+    var geometry = new THREE.SphereGeometry(1, 20, 20);
+
+    for (var i = 0; i < 20; i++) {
+        // MeshPhongMaterial
+        var ballmaterial = new THREE.MeshPhongMaterial({
+            color: 0xffffff * Math.random(),
+            shininess: 0.5,
+            specular: 0xffffff,
+            envMap: textureCube
+        });
+
+        var mesh = new THREE.Mesh(geometry, ballmaterial);
+
+        mesh.position.set(
+            (Math.random() - 0.5) * 200,
+            Math.random() * 50, (Math.random() - 0.5) * 200
+        );
+
+        mesh.scale.multiplyScalar(10);
+        object.add(mesh);
+
+    }
+
+
+    // Lights
+
+    // scene.add( new THREE.AmbientLight( 0xffffff ) );
+
+    // light = new THREE.DirectionalLight( 0xffffff );
+    // light.position.set( 1, 1, 1 );
+    // scene.add( light );
+
+    scene.add(new THREE.AmbientLight(0x222222));
+
+    directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+    directionalLight.position.set(2, 1.2, 10).normalize();
+    scene.add(directionalLight);
+
+    directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(-2, 1.2, -10).normalize();
+    scene.add(directionalLight);
+
+
+    initPostprocessing();
+
+    renderer.autoClear = false;
+
+    renderer.domElement.style.position = 'absolute';
+    renderer.domElement.style.left = "0px";
+
+    stats = new Stats();
+    stats.domElement.style.position = 'absolute';
+    stats.domElement.style.top = '0px';
+    container.appendChild(stats.domElement);
+
+    document.addEventListener('mousemove', onDocumentMouseMove, false);
+    document.addEventListener('touchstart', onDocumentTouchStart, false);
+    document.addEventListener('touchmove', onDocumentTouchMove, false);
+
+    effectController = {
+
+        enabled: true,
+        jsDepthCalculation: true,
+        shaderFocus: false,
+
+        fstop: 2.2,
+        maxblur: 1.0,
+
+        showFocus: false,
+        focalDepth: 2.8,
+        manualdof: false,
+        vignetting: false,
+        depthblur: false,
+
+        threshold: 0.5,
+        gain: 2.0,
+        bias: 0.5,
+        fringe: 0.7,
+
+        focalLength: 35,
+        noise: true,
+        pentagon: false,
+
+        dithering: 0.0001
+
     };
-}());
+
+    var matChanger = function() {
+
+        for (var e in effectController) {
+            if (e in postprocessing.bokeh_uniforms)
+                postprocessing.bokeh_uniforms[e].value = effectController[e];
+        }
+
+        postprocessing.enabled = effectController.enabled;
+        postprocessing.bokeh_uniforms['znear'].value = camera.near;
+        postprocessing.bokeh_uniforms['zfar'].value = camera.far;
+        camera.setLens(effectController.focalLength);
+
+    };
+
+    var gui = new dat.GUI();
+
+    gui.add(effectController, "enabled").onChange(matChanger);
+    gui.add(effectController, "jsDepthCalculation").onChange(matChanger);
+    gui.add(effectController, "shaderFocus").onChange(matChanger);
+    gui.add(effectController, "focalDepth", 0.0, 200.0).listen().onChange(matChanger);
+
+    gui.add(effectController, "fstop", 0.1, 22, 0.001).onChange(matChanger);
+    gui.add(effectController, "maxblur", 0.0, 5.0, 0.025).onChange(matChanger);
+
+    gui.add(effectController, "showFocus").onChange(matChanger);
+    gui.add(effectController, "manualdof").onChange(matChanger);
+    gui.add(effectController, "vignetting").onChange(matChanger);
+
+    gui.add(effectController, "depthblur").onChange(matChanger);
+
+    gui.add(effectController, "threshold", 0, 1, 0.001).onChange(matChanger);
+    gui.add(effectController, "gain", 0, 100, 0.001).onChange(matChanger);
+    gui.add(effectController, "bias", 0, 3, 0.001).onChange(matChanger);
+    gui.add(effectController, "fringe", 0, 5, 0.001).onChange(matChanger);
+
+    gui.add(effectController, "focalLength", 16, 80, 0.001).onChange(matChanger);
+
+    gui.add(effectController, "noise").onChange(matChanger);
+
+    gui.add(effectController, "dithering", 0, 0.001, 0.0001).onChange(matChanger);
+
+    gui.add(effectController, "pentagon").onChange(matChanger);
+
+    gui.add(shaderSettings, "rings", 1, 8).step(1).onChange(shaderUpdate);
+    gui.add(shaderSettings, "samples", 1, 13).step(1).onChange(shaderUpdate);
+
+    matChanger();
+
+    window.addEventListener('resize', onWindowResize, false);
+
+}
+
+function onWindowResize() {
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+}
+
+function onDocumentMouseMove(event) {
+
+    mouse.x = (event.clientX - windowHalfX) / windowHalfX;
+    mouse.y = -(event.clientY - windowHalfY) / windowHalfY;
+
+    postprocessing.bokeh_uniforms['focusCoords'].value.set(event.clientX / window.innerWidth, 1 - event.clientY / window.innerHeight);
+
+}
+
+function onDocumentTouchStart(event) {
+
+    if (event.touches.length == 1) {
+
+        event.preventDefault();
+
+        mouse.x = (event.touches[0].pageX - windowHalfX) / windowHalfX;
+        mouse.y = -(event.touches[0].pageY - windowHalfY) / windowHalfY;
+
+    }
+}
+
+function onDocumentTouchMove(event) {
+
+    if (event.touches.length == 1) {
+
+        event.preventDefault();
+
+        mouse.x = (event.touches[0].pageX - windowHalfX) / windowHalfX;
+        mouse.y = -(event.touches[0].pageY - windowHalfY) / windowHalfY;
+
+    }
+
+}
+
+function initPostprocessing() {
+
+    postprocessing.scene = new THREE.Scene();
+
+    postprocessing.camera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, -10000, 10000);
+    postprocessing.camera.position.z = 100;
+
+    postprocessing.scene.add(postprocessing.camera);
+
+    var pars = {
+        minFilter: THREE.LinearFilter,
+        magFilter: THREE.LinearFilter,
+        format: THREE.RGBFormat
+    };
+    postprocessing.rtTextureDepth = new THREE.WebGLRenderTarget(window.innerWidth, height, pars);
+    postprocessing.rtTextureColor = new THREE.WebGLRenderTarget(window.innerWidth, height, pars);
+
+
+
+    var bokeh_shader = THREE.BokehShader;
+
+    postprocessing.bokeh_uniforms = THREE.UniformsUtils.clone(bokeh_shader.uniforms);
+
+    postprocessing.bokeh_uniforms["tColor"].value = postprocessing.rtTextureColor;
+    postprocessing.bokeh_uniforms["tDepth"].value = postprocessing.rtTextureDepth;
+
+    postprocessing.bokeh_uniforms["textureWidth"].value = window.innerWidth;
+
+    postprocessing.bokeh_uniforms["textureHeight"].value = height;
+
+    postprocessing.materialBokeh = new THREE.ShaderMaterial({
+
+        uniforms: postprocessing.bokeh_uniforms,
+        vertexShader: bokeh_shader.vertexShader,
+        fragmentShader: bokeh_shader.fragmentShader,
+        defines: {
+            RINGS: shaderSettings.rings,
+            SAMPLES: shaderSettings.samples
+        }
+
+    });
+
+    postprocessing.quad = new THREE.Mesh(new THREE.PlaneBufferGeometry(window.innerWidth, window.innerHeight), postprocessing.materialBokeh);
+    postprocessing.quad.position.z = -500;
+    postprocessing.scene.add(postprocessing.quad);
+
+}
+
+function shaderUpdate() {
+    postprocessing.materialBokeh.defines.RINGS = shaderSettings.rings;
+    postprocessing.materialBokeh.defines.SAMPLES = shaderSettings.samples;
+
+    postprocessing.materialBokeh.needsUpdate = true;
+
+}
+
+function animate() {
+
+    requestAnimationFrame(animate, renderer.domElement);
+
+    render();
+    stats.update();
+
+}
+
+function linearize(depth) {
+    var zfar = camera.far;
+    var znear = camera.near;
+    return -zfar * znear / (depth * (zfar - znear) - zfar);
+}
+
+
+function smoothstep(near, far, depth) {
+    var x = saturate((depth - near) / (far - near));
+    return x * x * (3 - 2 * x);
+}
+
+function saturate(x) {
+    return Math.max(0, Math.min(1, x));
+}
+
+function render() {
+
+    var time = Date.now() * 0.00015;
+
+    camera.position.x = Math.cos(time) * 400;
+    camera.position.z = Math.sin(time) * 500;
+    camera.position.y = Math.sin(time / 1.4) * 100;
+
+    camera.lookAt(target);
+
+    camera.updateMatrixWorld();
+
+    if (effectController.jsDepthCalculation) {
+
+        raycaster.setFromCamera(mouse, camera);
+
+        var intersects = raycaster.intersectObjects(scene.children, true);
+
+
+        if (intersects.length > 0) {
+
+            var targetDistance = intersects[0].distance;
+
+            distance += (targetDistance - distance) * 0.03;
+
+            var sdistance = smoothstep(camera.near, camera.far, distance);
+
+            var ldistance = linearize(1 - sdistance);
+
+            // (Math.random() < 0.1) && console.log('moo', targetDistance, distance, ldistance);
+
+            postprocessing.bokeh_uniforms['focalDepth'].value = ldistance;
+
+            effectController['focalDepth'] = ldistance;
+
+        }
+
+    }
+
+    for (var i = 0; i < leaves; i++) {
+        plane = planes[i];
+        plane.rotation.x += plane.rotation.dx;
+        plane.rotation.y += plane.rotation.dy;
+        plane.rotation.z += plane.rotation.dz;
+        plane.position.y -= 2;
+        plane.position.x += plane.position.dx;
+        plane.position.z += plane.position.dz;
+        if (plane.position.y < 0) plane.position.y += 300;
+    }
+
+
+    if (postprocessing.enabled) {
+
+        renderer.clear();
+
+        // Render scene into texture
+
+        scene.overrideMaterial = null;
+        renderer.render(scene, camera, postprocessing.rtTextureColor, true);
+
+        // Render depth into texture
+
+        scene.overrideMaterial = material_depth;
+        renderer.render(scene, camera, postprocessing.rtTextureDepth, true);
+
+        // Render bokeh composite
+
+        renderer.render(postprocessing.scene, postprocessing.camera);
+
+
+    } else {
+
+        scene.overrideMaterial = null;
+
+        renderer.clear();
+        renderer.render(scene, camera);
+
+    }
+
+}
