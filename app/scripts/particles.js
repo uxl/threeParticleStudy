@@ -69,8 +69,8 @@ var PARTICLES = (function() {
             animate();
             addGui();
 
-            console.log('1 -- ' + scene);
-            console.log('2 -- ' + scene.children);
+            //console.log('1 -- ' + scene);
+            //console.log('2 -- ' + scene.children);
             //console.log('3 -- ' + scene.getObjectByName('part1', true))
         },
         createParticles = function() {
@@ -80,7 +80,7 @@ var PARTICLES = (function() {
             });
 
             for (var i = 0; i < settings.number; i++) {
-                console.log('creating: ' + i);
+                //console.log('creating: ' + i);
                 particle = new THREE.Sprite(material);
 
                 particle.name = "part" + i;
@@ -91,7 +91,7 @@ var PARTICLES = (function() {
         },
         removeParticles = function() {
             resetMe = true;
-            console.log('PARTICLES.reset called');
+            //console.log('PARTICLES.reset called');
             render();
             var parent = document.getElementsByTagName("BODY")[0];
 
@@ -181,13 +181,15 @@ var PARTICLES = (function() {
             //   canvas.width = settings.width;
             //   canvas.height = 3 * settings.height;
             //   context = canvas.getContext("2d");
-            //   context.fillStyle = "000";
-            //   context.globalCompositeOperation = 'source-over';
-            //   context.fillRect(0, 0, canvas.width, canvas.height);
-            //   context.globalCompositeOperation = 'lighter';
-            //   context.lineWidth = 3;
-            //   context.shadowColor = "hsl(0, 0%, 50%)";
-            //   context.shadowOffsetY = -settings.height;
+
+
+            context.fillStyle = "000";
+            context.globalCompositeOperation = 'source-over';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.globalCompositeOperation = 'lighter';
+            context.lineWidth = 3;
+            context.shadowColor = "hsl(0, 0%, 50%)";
+            context.shadowOffsetY = -settings.height;
 
             //   for (var i = 0; i < settings.number; i++) {
             //     var x = Math.floor(1920 * Math.random()),
