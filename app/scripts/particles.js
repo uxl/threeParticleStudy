@@ -19,14 +19,18 @@ var PARTICLES = (function() {
         mouseY = 0,
         windowHalfX = window.innerWidth / 2,
         windowHalfY = window.innerHeight / 2,
-        particleSpeed = 100000,
-        particleSpread = 1000,
-        particleNumber = 280,
         resetMe = false,
         gui = null,
-        maxSize = 32,
-        minSize = 16,
-        particleShape = 0,
+
+        //particle init values
+        settings = {
+            speed:100000,
+            spread:1000,
+            number:280,
+            maxSize:32,
+            minSize:16,
+            symbol:0
+        },
 
         init = function() {
             console.log('PARTICLES.init called');
@@ -74,7 +78,7 @@ var PARTICLES = (function() {
                 blending: THREE.AdditiveBlending
             });
 
-            for (var i = 0; i < particleNumber; i++) {
+            for (var i = 0; i < settings.number; i++) {
                 console.log('creating: ' + i);
                 particle = new THREE.Sprite(material);
 
@@ -90,25 +94,25 @@ var PARTICLES = (function() {
             render();
             var parent = document.getElementsByTagName("BODY")[0];
 
-            for (var i = 0; i < particleNumber; i++) {
+            for (var i = 0; i < settings.number; i++) {
                 console.log('removing: ' + i);
                 var me = scene.getObjectByName('part' + i);
                 scene.remove(me);
             }
             render();
         },
-        bokeh = function(x, y, r, shape, s, rr, ro) {
-            ctx.shadowBlur = r / settings.minsize * (Math.random() * 9.9 + 0.1);
+        bokeh = function(x, y, r, symbol, s, rr, ro) {
+            context.shadowBlur = r / settings.minsize * (Math.random() * 9.9 + 0.1);
 
-            ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
-            ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+            context.strokeStyle = "rgba(0, 0, 0, 0.5)";
+            context.fillStyle = "rgba(0, 0, 0, 0.3)";
 
-            ctx.save();
-            ctx.translate(x, y + settings.height);
-            ctx.beginPath();
-            switch (parseInt(shape)) {
+            context.save();
+            context.translate(x, y + settings.height);
+            context.beginPath();
+            switch (parseInt(symbol)) {
                 case 0:
-                    ctx.arc(0, 0, r, 0, 2 * Math.PI);
+                    context.arc(0, 0, r, 0, 2 * Math.PI);
                     break;
                 case 1:
                     polygon(r, s, rr, ro);
@@ -120,39 +124,39 @@ var PARTICLES = (function() {
                     heart(r, rr, ro);
                     break;
             }
-            ctx.fill();
-            ctx.stroke();
-            ctx.restore();
+            context.fill();
+            context.stroke();
+            context.restore();
         },
         polygon = function(r, s, rr, ro) {
             a = 2 * Math.PI / s;
 
-            ctx.rotate(rr * (1 - 2 * Math.random()) * Math.PI + a / 2 + ro);
+            context.rotate(rr * (1 - 2 * Math.random()) * Math.PI + a / 2 + ro);
 
-            ctx.moveTo(0, r);
+            context.moveTo(0, r);
             for (var i = 0; i < s; i++) {
-                ctx.rotate(a);
-                ctx.lineTo(0, r);
+                context.rotate(a);
+                context.lineTo(0, r);
             }
         },
         nstar = function(r, s, rr, ro) {
             a = 2 * Math.PI / s;
 
-            ctx.rotate(rr * (1 - 2 * Math.random()) * Math.PI + a / 2 + ro);
+            context.rotate(rr * (1 - 2 * Math.random()) * Math.PI + a / 2 + ro);
 
-            ctx.moveTo(0, r);
+            context.moveTo(0, r);
             for (var i = 0; i < 2 * s; i++) {
-                ctx.rotate(a / 2);
-                ctx.lineTo(0, r - (i % 2 == 0) * 2 * r / 3);
+                context.rotate(a / 2);
+                context.lineTo(0, r - (i % 2 == 0) * 2 * r / 3);
             }
         },
         heart = function(r, rr, ro) {
-            ctx.rotate(rr * (1 - 2 * Math.random()) * Math.PI + ro);
+            context.rotate(rr * (1 - 2 * Math.random()) * Math.PI + ro);
 
-            ctx.moveTo(0, 3 * r / 2);
-            ctx.arc(-r / 2, 0, r / 2, 3 * Math.PI / 4, 0);
-            ctx.arc(r / 2, 0, r / 2, Math.PI, Math.PI / 4);
-            ctx.lineTo(0, 3 * r / 2);
+            context.moveTo(0, 3 * r / 2);
+            context.arc(-r / 2, 0, r / 2, 3 * Math.PI / 4, 0);
+            context.arc(r / 2, 0, r / 2, Math.PI, Math.PI / 4);
+            context.lineTo(0, 3 * r / 2);
         },
         onWindowResize = function() {
 
@@ -167,16 +171,40 @@ var PARTICLES = (function() {
         },
         generateSprite = function() {
 
-            var canvas = document.createElement('canvas');
-            canvas.width = 200;
-            canvas.height = 200;
+            // var canvas = document.createElement('canvas');
+            // canvas.width = 200;
+            // canvas.height = 200;
 
             var context = canvas.getContext('2d');
-            var gradient = context.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2);
-            gradient.addColorStop(0, 'rgba(255,255,100,0.5)');
-            gradient.addColorStop(0.2, 'rgba(255,255,100,0.5)');
-            gradient.addColorStop(0.8, 'rgba(255,255,100,0.5)');
-            gradient.addColorStop(1, 'rgba(255,255,100,0)');
+
+              canvas.width = settings.width;
+              canvas.height = 3 * settings.height;
+              context = canvas.getContext("2d");
+              context.fillStyle = "000";
+              context.globalCompositeOperation = 'source-over';
+              context.fillRect(0, 0, canvas.width, canvas.height);
+              context.globalCompositeOperation = 'lighter';
+              context.lineWidth = 3;
+              context.shadowColor = "hsl(0, 0%, 50%)";
+              context.shadowOffsetY = -settings.height;
+
+              for (var i = 0; i < settings.number; i++) {
+                var x = Math.floor(1920 * Math.random()),
+                    y = Math.floor(1080 * Math.random()),
+                    r = maxsize - (settings.maxsize - settings.minsize) * Math.random();
+
+                  var randomrot = 0;
+                  var rotation = 0;
+                  var vertices = 2;
+
+                bokeh(x, y, r, symbol, vertices, randomrot, Math.PI * rotation / 180);
+              }
+
+            // var gradient = context.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2);
+            // gradient.addColorStop(0, 'rgba(255,255,100,0.5)');
+            // gradient.addColorStop(0.2, 'rgba(255,255,100,0.5)');
+            // gradient.addColorStop(0.8, 'rgba(255,255,100,0.5)');
+            // gradient.addColorStop(1, 'rgba(255,255,100,0)');
 
             context.fillStyle = gradient;
             context.fillRect(0, 0, canvas.width, canvas.height);
@@ -188,9 +216,9 @@ var PARTICLES = (function() {
 
             var particle = this instanceof THREE.Sprite ? this : particle;
             var delay = delay !== undefined ? delay : 0;
-            var randomx = (Math.random() * particleSpread) - windowHalfX;
-            var randomy = (Math.random() * particleSpread) - windowHalfY;
-            var randomz = Math.random() * particleSpread;
+            var randomx = (Math.random() * settings.spread) - windowHalfX;
+            var randomy = (Math.random() * settings.spread) - windowHalfY;
+            var randomz = Math.random() * settings.spread;
 
             particle.position.set(randomx, randomy, randomz);
             particle.scale.x = particle.scale.y = Math.random() * maxSize + minSize;
@@ -253,8 +281,6 @@ var PARTICLES = (function() {
             }
         },
 
-        //
-
         animate = function() {
             console.log('PARTICLES.animate');
             if (resetMe == true) {
@@ -289,35 +315,43 @@ var PARTICLES = (function() {
             gui = new dat.GUI();
             var params = {
                 zoom: 1000,
-                speed: particleSpeed,
-                spread: particleSpread,
-                number: particleNumber,
-                max_size: maxSize,
-                min_size: minSize,
-                shape: particleShape,
+                speed: settings.speed,
+                spread: settings.spread,
+                number: settings.number,
+                max_size: settings.maxSize,
+                min_size: settings.minSize,
+                symbol: settings.symbol,
                 reset: resetScene
             };
-            gui.add(params, "shape", {
+            gui.add(params, "symbol", {
                 circle: 0,
                 polygon: 1,
                 star: 2,
                 hearts: 3
             }).onFinishChange(function() {
                 // refresh based on the new value of params.interation
-                particleShape = shape;
+                removeParticles();
+                settings.symbol = symbol;
+                createParticles();
+                render();
+                animate();
             });
-            gui.add(params, 'zoom').min(0).max(5000).step(1).onFinishChange(function() {
+            gui.add(params, 'zoom').min(0).max(5000).step(1).onChange(function() {
                 // refresh based on the new value of params.interation
                 camera.position.z = params.zoom;
             });
-            gui.add(params, 'speed').min(0).max(200000).step(1000).onFinishChange(function() {
+            gui.add(params, 'speed').min(0).max(100000).step(1000).onFinishChange(function() {
                 // refresh based on the new value of params.interation
-                particleSpeed = params.speed;
+                removeParticles();
+                settings.speed = params.speed;
+                createParticles();
+                render();
+                animate();
             });
             gui.add(params, 'spread').min(0).max(5000).step(250).onFinishChange(function() {
                 // refresh based on the new value of params.interation
                 removeParticles();
-                particleSpread = params.spread;
+                settings.spread = params.spread;
                 createParticles();
                 render();
                 animate();
@@ -325,7 +359,7 @@ var PARTICLES = (function() {
             gui.add(params, 'number').min(0).max(2000).step(1).onFinishChange(function() {
                 // refresh based on the new value of params.interation
                 removeParticles();
-                particleNumber = params.number;
+                settings.number = params.number;
                 createParticles();
                 render();
                 animate();
@@ -333,7 +367,7 @@ var PARTICLES = (function() {
             gui.add(params, 'max_size').min(0).max(200).step(2).onFinishChange(function() {
                 // refresh based on the new value of params.interation
                 removeParticles();
-                maxSize = params.max_size;
+                settings.maxSize = params.max_size;
                 createParticles();
                 render();
                 animate();
@@ -342,7 +376,7 @@ var PARTICLES = (function() {
             gui.add(params, 'min_size').min(0).max(200).step(2).onFinishChange(function() {
                 // refresh based on the new value of params.interation
                 removeParticles();
-                minSize = params.min_size;
+                settings.minSize = params.min_size;
                 createParticles();
                 render();
                 animate();
