@@ -283,7 +283,7 @@ var PARTICLES = (function() {
         },
 
         animate = function() {
-            console.log('PARTICLES.animate');
+            // console.log('PARTICLES.animate');
             if (resetMe == true) {
                 resetMe = false;
             } else {
@@ -333,7 +333,7 @@ var PARTICLES = (function() {
             }).onFinishChange(function() {
                 // refresh based on the new value of params.interation
                 removeParticles();
-                settings.symbol = symbol;
+                settings.symbol = params.symbol;
                 createParticles();
                 render();
                 animate();
@@ -383,8 +383,9 @@ var PARTICLES = (function() {
                 render();
                 animate();
             });
-            gui.add(params, "focus" ).onChange(function(){
+            gui.add(params, "focus" ).min(0).max(1000).step(100).onFinishChange(function(){
                 //refresh shaderfocus
+                alert('future feature');
             });
             gui.add(params, "reset");
 
