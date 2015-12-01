@@ -29,7 +29,8 @@ var PARTICLES = (function() {
             number:280,
             maxSize:32,
             minSize:16,
-            symbol:0
+            symbol:0,
+            focus:0
         },
 
         init = function() {
@@ -171,40 +172,40 @@ var PARTICLES = (function() {
         },
         generateSprite = function() {
 
-            // var canvas = document.createElement('canvas');
-            // canvas.width = 200;
-            // canvas.height = 200;
+            var canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 200;
 
             var context = canvas.getContext('2d');
 
-              canvas.width = settings.width;
-              canvas.height = 3 * settings.height;
-              context = canvas.getContext("2d");
-              context.fillStyle = "000";
-              context.globalCompositeOperation = 'source-over';
-              context.fillRect(0, 0, canvas.width, canvas.height);
-              context.globalCompositeOperation = 'lighter';
-              context.lineWidth = 3;
-              context.shadowColor = "hsl(0, 0%, 50%)";
-              context.shadowOffsetY = -settings.height;
+            //   canvas.width = settings.width;
+            //   canvas.height = 3 * settings.height;
+            //   context = canvas.getContext("2d");
+            //   context.fillStyle = "000";
+            //   context.globalCompositeOperation = 'source-over';
+            //   context.fillRect(0, 0, canvas.width, canvas.height);
+            //   context.globalCompositeOperation = 'lighter';
+            //   context.lineWidth = 3;
+            //   context.shadowColor = "hsl(0, 0%, 50%)";
+            //   context.shadowOffsetY = -settings.height;
 
-              for (var i = 0; i < settings.number; i++) {
-                var x = Math.floor(1920 * Math.random()),
-                    y = Math.floor(1080 * Math.random()),
-                    r = maxsize - (settings.maxsize - settings.minsize) * Math.random();
+            //   for (var i = 0; i < settings.number; i++) {
+            //     var x = Math.floor(1920 * Math.random()),
+            //         y = Math.floor(1080 * Math.random()),
+            //         r = maxsize - (settings.maxsize - settings.minsize) * Math.random();
 
-                  var randomrot = 0;
-                  var rotation = 0;
-                  var vertices = 2;
+            //       var randomrot = 0;
+            //       var rotation = 0;
+            //       var vertices = 2;
 
-                bokeh(x, y, r, symbol, vertices, randomrot, Math.PI * rotation / 180);
-              }
+            //     bokeh(x, y, r, symbol, vertices, randomrot, Math.PI * rotation / 180);
+            //   }
 
-            // var gradient = context.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2);
-            // gradient.addColorStop(0, 'rgba(255,255,100,0.5)');
-            // gradient.addColorStop(0.2, 'rgba(255,255,100,0.5)');
-            // gradient.addColorStop(0.8, 'rgba(255,255,100,0.5)');
-            // gradient.addColorStop(1, 'rgba(255,255,100,0)');
+            var gradient = context.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2);
+            gradient.addColorStop(0, 'rgba(255,255,100,0.5)');
+            gradient.addColorStop(0.2, 'rgba(255,255,100,0.5)');
+            gradient.addColorStop(0.8, 'rgba(255,255,100,0.5)');
+            gradient.addColorStop(1, 'rgba(255,255,100,0)');
 
             context.fillStyle = gradient;
             context.fillRect(0, 0, canvas.width, canvas.height);
@@ -221,7 +222,7 @@ var PARTICLES = (function() {
             var randomz = Math.random() * settings.spread;
 
             particle.position.set(randomx, randomy, randomz);
-            particle.scale.x = particle.scale.y = Math.random() * maxSize + minSize;
+            particle.scale.x = particle.scale.y = Math.random() * settings.maxSize + settings.minSize;
 
             new TWEEN.Tween(particle)
                 .delay(delay)
@@ -235,7 +236,7 @@ var PARTICLES = (function() {
                     x: Math.random() * 4000 - 2000,
                     y: Math.random() * 1000 - 500,
                     z: Math.random() * 4000 - 2000
-                }, particleSpeed)
+                }, settings.speed)
                 .start();
 
             new TWEEN.Tween(particle.scale)
@@ -321,6 +322,7 @@ var PARTICLES = (function() {
                 max_size: settings.maxSize,
                 min_size: settings.minSize,
                 symbol: settings.symbol,
+                focus: settings.focus,
                 reset: resetScene
             };
             gui.add(params, "symbol", {
@@ -381,9 +383,9 @@ var PARTICLES = (function() {
                 render();
                 animate();
             });
-            gui.add( params, "shaderFocus" ).onChange(function(){
+            gui.add(params, "focus" ).onChange(function(){
                 //refresh shaderfocus
-            } );
+            });
             gui.add(params, "reset");
 
 
