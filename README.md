@@ -2,7 +2,7 @@
 
 Yo Webapp scaffold with buildcontrol deploy to gh-pages
 
-## Third-Party Dependencies
+## System Dependencies
 ( Load these files if you don't have them already )
 
 No SUDO version of node  
@@ -23,24 +23,21 @@ install bower
 install grunt command line ( might need sudo )  
 `npm install -g grunt-cli`
 
-## Development
+## Development environment
 1. `git clone git@github.com:uxl/xmasscard.git`
-2. 'cd xmasscard'
+2. `cd xmasscard`
 3. `bower install` will install dependencies
 4. `npm install` will install grunt and node modules
 5. `grunt server` will build and initiate watch along with Livereload
 
 ## Deployment
-Deploy to:
+Deploy to gh-pages (public):
 http://uxl.github.io/xmasscard/
 
 ``` sh
 grunt build
 grunt deploy
 ```
-
-
-
 
 
 #Build Tools
