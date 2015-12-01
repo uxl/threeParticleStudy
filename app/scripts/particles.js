@@ -78,20 +78,19 @@ var PARTICLES = (function() {
             addGui();
 
             //geometry
-            geometry = new THREE.PlaneGeometry(1920, 1080, 200);
+            geometry = new THREE.PlaneGeometry(window.innerWidth*2 , window.innerHeight*2, 200);
 
+            // var material = new THREE.MeshBasicMaterial({
+            //     color: Math.random() * 0xffffff.
+            //     // opacity: 0.5 
+            // });
 
-            var material = new THREE.MeshBasicMaterial({
-                color: Math.random() * 0xffffff.
-                // opacity: 0.5 
-            });
+            // var mesh = new THREE.Mesh(geometry, material);
+            // scene.add(mesh);
 
-            var mesh = new THREE.Mesh(geometry, material);
-            scene.add(mesh);
-
-            var egh = new THREE.EdgesHelper(mesh, 0xffffff);
-            egh.material.linewidth = 2;
-            scene.add(egh);
+            // var egh = new THREE.EdgesHelper(mesh, 0x000000;
+            // egh.material.linewidth = 2;
+            // scene.add(egh);
 
             // var textureLoader = new THREE.TextureLoader();
             // textureLoader.load('images/night.jpg', function(){
@@ -108,7 +107,7 @@ var PARTICLES = (function() {
                     map: texture,
                                     side: THREE.FrontSide,
 
-                    overdraw: true
+                    overdraw: false
                 });
                 var mesh = new THREE.Mesh(geometry, material);
                 scene.add(mesh);
