@@ -27,7 +27,8 @@ var planes = [];
 var leaves = 100;
 var object = null,
     plane = null,
-    directionalLight;
+    directionalLight,
+    mesh;
 
 init();
 animate();
@@ -103,6 +104,7 @@ function init() {
     // scene.add(plane);
 
     // Plane particles
+    /*
     var planePiece = new THREE.PlaneBufferGeometry(10, 10, 1, 1);
 
     var planeMat = new THREE.MeshPhongMaterial({
@@ -115,7 +117,7 @@ function init() {
 
     var rand = Math.random;
 
-    for (i = 0; i < leaves; i++) {
+    for (var i = 0; i < leaves; i++) {
         plane = new THREE.Mesh(planePiece, planeMat);
         plane.rotation.set(rand(), rand(), rand());
         plane.rotation.dx = rand() * 0.1;
@@ -128,6 +130,11 @@ function init() {
         scene.add(plane);
         planes.push(plane);
     }
+*/
+    // var geometry = new THREE.SphereGeometry( 5, 32, 32 );
+    // var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+    // var sphere = new THREE.Mesh( geometry, material );
+    // scene.add( sphere );
 
     // Adding Monkeys
 
@@ -143,12 +150,13 @@ function init() {
             reflectivity: 1.0
         });
 
-        var monkeys = 20;
+        var monkeys = 5;
+        var geometry = new THREE.SphereGeometry( 5, 32, 32 );
 
         for (var i = 0; i < monkeys; i++) {
 
             var mesh = new THREE.Mesh(geometry, material);
-            mesh.scale.multiplyScalar(30);
+            mesh.scale.multiplyScalar(10);
 
 
             mesh.position.z = Math.cos(i / monkeys * Math.PI * 2) * 200;
@@ -165,7 +173,7 @@ function init() {
     });
 
 
-
+/*
     // Add Balls
     var geometry = new THREE.SphereGeometry(1, 20, 20);
 
@@ -178,6 +186,7 @@ function init() {
             envMap: textureCube
         });
 
+
         var mesh = new THREE.Mesh(geometry, ballmaterial);
 
         mesh.position.set(
@@ -189,8 +198,7 @@ function init() {
         object.add(mesh);
 
     }
-
-
+*/
     // Lights
 
     // scene.add( new THREE.AmbientLight( 0xffffff ) );
@@ -469,16 +477,16 @@ function render() {
 
     }
 
-    for (var i = 0; i < leaves; i++) {
-        plane = planes[i];
-        plane.rotation.x += plane.rotation.dx;
-        plane.rotation.y += plane.rotation.dy;
-        plane.rotation.z += plane.rotation.dz;
-        plane.position.y -= 2;
-        plane.position.x += plane.position.dx;
-        plane.position.z += plane.position.dz;
-        if (plane.position.y < 0) plane.position.y += 300;
-    }
+    // for (var i = 0; i < leaves; i++) {
+    //     plane = planes[i];
+    //     plane.rotation.x += plane.rotation.dx;
+    //     plane.rotation.y += plane.rotation.dy;
+    //     plane.rotation.z += plane.rotation.dz;
+    //     plane.position.y -= 2;
+    //     plane.position.x += plane.position.dx;
+    //     plane.position.z += plane.position.dz;
+    //     if (plane.position.y < 0) plane.position.y += 300;
+    // }
 
 
     if (postprocessing.enabled) {
