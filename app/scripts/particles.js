@@ -38,7 +38,8 @@ var PARTICLES = (function() {
             hue: 280,
             saturation: 40,
             width: 1920,
-            height: 1080
+            height: 1080,
+            aspect: 1,
         },
 
         init = function() {
@@ -51,7 +52,11 @@ var PARTICLES = (function() {
             document.body.appendChild(container);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 5000);
+            //debugger;
+            camera.fov = 50;
             camera.position.z = 1000;
+            camera.focus = settings.focus;
+            camera.aspect = settings.aspect;
 
             scene = new THREE.Scene();
 
@@ -78,25 +83,7 @@ var PARTICLES = (function() {
             addGui();
 
             //geometry
-            geometry = new THREE.PlaneGeometry(window.innerWidth*2 , window.innerHeight*2, 200);
-
-            // var material = new THREE.MeshBasicMaterial({
-            //     color: Math.random() * 0xffffff.
-            //     // opacity: 0.5 
-            // });
-
-            // var mesh = new THREE.Mesh(geometry, material);
-            // scene.add(mesh);
-
-            // var egh = new THREE.EdgesHelper(mesh, 0x000000;
-            // egh.material.linewidth = 2;
-            // scene.add(egh);
-
-            // var textureLoader = new THREE.TextureLoader();
-            // textureLoader.load('images/night.jpg', function(){
-            //     var fillMesh = new THREE.Mesh(geometry, map);
-            //     scene.add( fillMesh );
-            // });
+            geometry = new THREE.PlaneGeometry(window.innerWidth*3 , window.innerHeight*3, 200);
 
             var loader = new THREE.TextureLoader();
             loader.load('images/night.jpg', function(texture) {
@@ -116,7 +103,6 @@ var PARTICLES = (function() {
 
             // var texture = texture = THREE.TextureLoader( 'images/night.jpg' );
             //var imageMat = new THREE.MeshBasicMaterial( {color:0xffffff, map: texture } );
-
 
             //console.log('1 -- ' + scene);
             //console.log('2 -- ' + scene.children);
@@ -238,13 +224,13 @@ var PARTICLES = (function() {
             context.shadowColor = "hsl(0, 0%, 50%)";
             context.shadowOffsetY = -settings.height;
 
-            var gradient = context.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2);
-            gradient.addColorStop(0, 'rgba(255,255,100,0.5)');
-            gradient.addColorStop(0.2, 'rgba(255,255,100,0.5)');
-            gradient.addColorStop(0.8, 'rgba(255,255,100,0.5)');
-            gradient.addColorStop(1, 'rgba(255,255,100,0)');
+            // var gradient = context.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2);
+            // gradient.addColorStop(0, 'rgba(255,255,100,0.5)');
+            // gradient.addColorStop(0.2, 'rgba(255,255,100,0.5)');
+            // gradient.addColorStop(0.8, 'rgba(255,255,100,0.5)');
+            // gradient.addColorStop(1, 'rgba(255,255,100,0)');
 
-            context.fillStyle = gradient;
+            context.fillStyle = 'white';
             context.fillRect(0, 0, canvas.width, canvas.height);
 
             return canvas;
@@ -362,7 +348,8 @@ var PARTICLES = (function() {
                 focus: settings.focus,
                 reset: resetScene,
                 hue: settings.hue,
-                saturation: settings.saturation
+                saturation: settings.saturation,
+                aspect: settings.aspect
             };
             gui.add(params, "symbol", {
                 circle: 0,
@@ -424,7 +411,13 @@ var PARTICLES = (function() {
             });
             gui.add(params, "focus").min(0).max(1000).step(100).onFinishChange(function() {
                 //refresh shaderfocus
-                alert('future feature');
+                settings.focus = params.focus;
+                camera.focus = settings.focus;
+            });
+             gui.add(params, "aspect").min(0).max(22).step(1).onFinishChange(function() {
+                //refresh shaderfocus
+                settings.aspect = params.aspect;
+                camera.focus = settings.focus;
             });
             gui.add(params, "hue", 0, 360).onFinishChange(function() {
                 alert('future feature');
