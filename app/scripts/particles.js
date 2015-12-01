@@ -316,7 +316,11 @@ var PARTICLES = (function() {
             });
             gui.add(params, 'spread').min(0).max(5000).step(250).onFinishChange(function() {
                 // refresh based on the new value of params.interation
+                removeParticles();
                 particleSpread = params.spread;
+                createParticles();
+                render();
+                animate();
             });
             gui.add(params, 'number').min(0).max(2000).step(1).onFinishChange(function() {
                 // refresh based on the new value of params.interation
