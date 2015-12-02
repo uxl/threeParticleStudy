@@ -161,7 +161,7 @@ function init() {
         for (var i = 0; i < monkeys; i++) {
 
             var mesh = new THREE.Mesh(geometry, material);
-            mesh.scale.multiplyScalar(10);
+            mesh.scale.multiplyScalar(5);
 
 
             mesh.position.z = Math.cos(i / monkeys * Math.PI * 2) * 200;
