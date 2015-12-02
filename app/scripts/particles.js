@@ -25,7 +25,7 @@ var PARTICLES = (function() {
         renderer = null,
         stats = null,
         raycaster = null,
-        resetMe = false, 
+        resetMe = false,
         me = null,
         group = null,
         texture = null,
@@ -59,7 +59,9 @@ var PARTICLES = (function() {
             scene = new THREE.Scene;
 
             var cubeGeometry = new THREE.CubeGeometry(100, 100, 100);
-            var cubeMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+            var cubeMaterial = new THREE.MeshLambertMaterial({
+                color: 0xffffff
+            });
             var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
             cube.rotation.y = Math.PI * 45 / 180;
             cube.position.y = 100;
@@ -69,9 +71,11 @@ var PARTICLES = (function() {
             cv = document.createElement("canvas");
 
             //generate();
-           
+
             var cubeGeometry = new THREE.BoxGeometry(100, 100, 100);
-            var cubeMaterial = new THREE.MeshLambertMaterial({color: 0xFF0000 });
+            var cubeMaterial = new THREE.MeshLambertMaterial({
+                color: 0xFF0000
+            });
             // cubeMaterial.map = new THREE.Texture();
             // var canvasCube = new THREE.Mesh(cubeGeometry, cubeMaterial);
             //  var material = new THREE.MeshBasicMaterial({
@@ -84,32 +88,39 @@ var PARTICLES = (function() {
             mesh.rotation.y = 45;
             cube.position.y = -100;
             scene.add(mesh);
-             
+
 
             //shapes 
             group = new THREE.Group();
             group.position.y = 50;
-            scene.add( group );
+            scene.add(group);
 
-            texture = THREE.ImageUtils.loadTexture( "images/UV_Grid_Sm.jpg" );
+            texture = THREE.ImageUtils.loadTexture("images/UV_Grid_Sm.jpg");
             texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-            texture.repeat.set( 0.008, 0.008 );
+            texture.repeat.set(0.008, 0.008);
 
-            var extrudeSettings = { amount: 8, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: 1, bevelThickness: 1 };
+            var extrudeSettings = {
+                amount: 8,
+                bevelEnabled: true,
+                bevelSegments: 2,
+                steps: 2,
+                bevelSize: 1,
+                bevelThickness: 1
+            };
 
             // addShape( shape, color, x, y, z, rx, ry,rz, s );
 
-            addShape( californiaShape,  extrudeSettings, 0xf08000, -300, -100, 0, 0, 0, 0, 1 );
-            addShape( triangleShape,    extrudeSettings, 0x8080f0, -180,    0, 0, 0, 0, 0, 1 );
-            addShape( roundedRectShape, extrudeSettings, 0x008000, -150,  150, 0, 0, 0, 0, 1 );
-            addShape( trackShape,       extrudeSettings, 0x008080,  200, -100, 0, 0, 0, 0, 1 );
-            addShape( squareShape,      extrudeSettings, 0x0040f0,  150,  100, 0, 0, 0, 0, 1 );
-            addShape( heartShape,       extrudeSettings, 0xf00000,   60,  100, 0, 0, 0, Math.PI, 1 );
-            addShape( circleShape,      extrudeSettings, 0x00f000,  120,  250, 0, 0, 0, 0, 1 );
-            addShape( fishShape,        extrudeSettings, 0x404040,  -60,  200, 0, 0, 0, 0, 1 );
-            addShape( smileyShape,      extrudeSettings, 0xf000f0, -200,  250, 0, 0, 0, Math.PI, 1 );
-            addShape( arcShape,         extrudeSettings, 0x804000,  150,    0, 0, 0, 0, 0, 1 );
-            addShape( splineShape,      extrudeSettings, 0x808080,  -50, -100, 0, 0, 0, 0, 1 );
+            addShape('flat', circleShape, extrudeSettings, 0xf08000, -300, -100, 0, 0, 0, 0, 1);
+            addShape('flat', circleShape, extrudeSettings, 0x8080f0, -180, 0, 0, 0, 0, 0, 1);
+            addShape('flat', circleShape, extrudeSettings, 0x008000, -150, 150, 0, 0, 0, 0, 1);
+            addShape('flat', circleShape, extrudeSettings, 0x008080, 200, -100, 0, 0, 0, 0, 1);
+            addShape('flat', circleShape, extrudeSettings, 0x0040f0, 150, 100, 0, 0, 0, 0, 1);
+            addShape('flat', circleShape, extrudeSettings, 0xf00000, 60, 100, 0, 0, 0, Math.PI, 1);
+            addShape('flat', circleShape, extrudeSettings, 0x00f000, 120, 250, 0, 0, 0, 0, 1);
+            addShape('flat', circleShape, extrudeSettings, 0x404040, -60, 200, 0, 0, 0, 0, 1);
+            addShape('flat', circleShape, extrudeSettings, 0xf000f0, -200, 250, 0, 0, 0, Math.PI, 1);
+            addShape('flat', circleShape, extrudeSettings, 0x804000, 150, 0, 0, 0, 0, 0, 1);
+            addShape('flat', circleShape, extrudeSettings, 0x808080, -50, -100, 0, 0, 0, 0, 1);
 
             //
 
@@ -117,13 +128,16 @@ var PARTICLES = (function() {
 
             camera = new THREE.PerspectiveCamera(45, settings.width / settings.height, 0.1, 10000);
             camera.position.y = 160;
-            camera.position.z = 400;
+            camera.position.z = 1000;
             camera.lookAt(mesh.position);
 
             scene.add(camera);
 
             var skyboxGeometry = new THREE.CubeGeometry(10000, 10000, 10000);
-            var skyboxMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide });
+            var skyboxMaterial = new THREE.MeshBasicMaterial({
+                color: 0x000000,
+                side: THREE.BackSide
+            });
             var skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
 
             scene.add(skybox);
@@ -201,7 +215,7 @@ var PARTICLES = (function() {
                 scene.add(particle);
             }
         },
-         generateSprite = function() {
+        generateSprite = function() {
 
             var canvas = document.createElement('canvas');
             canvas.width = 200;
@@ -426,77 +440,111 @@ var PARTICLES = (function() {
             renderer.render(scene, camera);
 
         },
-        addShape = function( shape, extrudeSettings, color, x, y, z, rx, ry, rz, s ) {
+        addShape = function(style, shape, extrudeSettings, color, x, y, z, rx, ry, rz, s) {
 
-                    var points = shape.createPointsGeometry();
-                    var spacedPoints = shape.createSpacedPointsGeometry( 50 );
+            var points = shape.createPointsGeometry();
+            var spacedPoints = shape.createSpacedPointsGeometry(50);
 
+            switch (style) {
+                case 'texture':
                     // flat shape with texture
                     // note: default UVs generated by ShapeGemoetry are simply the x- and y-coordinates of the vertices
 
-                    var geometry = new THREE.ShapeGeometry( shape );
+                    var geometry = new THREE.ShapeGeometry(shape);
 
-                    var mesh = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { side: THREE.DoubleSide, map: texture } ) );
-                    mesh.position.set( x, y, z - 175 );
-                    mesh.rotation.set( rx, ry, rz );
-                    mesh.scale.set( s, s, s );
-                    group.add( mesh );
-
+                    var mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({
+                        side: THREE.DoubleSide,
+                        map: texture
+                    }));
+                    mesh.position.set(x, y, z - 175);
+                    mesh.rotation.set(rx, ry, rz);
+                    mesh.scale.set(s, s, s);
+                    group.add(mesh);
+                    break;
+                case 'flat':
                     // flat shape
 
-                    var geometry = new THREE.ShapeGeometry( shape );
+                    var geometry = new THREE.ShapeGeometry(shape);
 
-                    var mesh = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { color: color, side: THREE.DoubleSide } ) );
-                    mesh.position.set( x, y, z - 125 );
-                    mesh.rotation.set( rx, ry, rz );
-                    mesh.scale.set( s, s, s );
-                    group.add( mesh );
+                    var mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({
+                        color: color,
+                        side: THREE.DoubleSide,
+                        blending: THREE.AdditiveBlending,
+                        opacity: 0.5,
+                        transparent: true
+                    }));
+                    mesh.position.set(x, y, z - Math.random()*1000);
+                    mesh.rotation.set(rx, ry, rz);
+                    mesh.scale.set(s, s, s);
+                    group.add(mesh);
 
+                    break;
+                case '3d':
                     // 3d shape
 
-                    var geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+                    var geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
 
-                    var mesh = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { color: color } ) );
-                    mesh.position.set( x, y, z - 75 );
-                    mesh.rotation.set( rx, ry, rz );
-                    mesh.scale.set( s, s, s );
-                    group.add( mesh );
-
+                    var mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({
+                        color: color
+                    }));
+                    mesh.position.set(x, y, z - 75);
+                    mesh.rotation.set(rx, ry, rz);
+                    mesh.scale.set(s, s, s);
+                    group.add(mesh);
+                    break;
+                case 'solidline':
                     // solid line
 
-                    var line = new THREE.Line( points, new THREE.LineBasicMaterial( { color: color, linewidth: 3 } ) );
-                    line.position.set( x, y, z - 25 );
-                    line.rotation.set( rx, ry, rz );
-                    line.scale.set( s, s, s );
-                    group.add( line );
-
+                    var line = new THREE.Line(points, new THREE.LineBasicMaterial({
+                        color: color,
+                        linewidth: 3
+                    }));
+                    line.position.set(x, y, z - 25);
+                    line.rotation.set(rx, ry, rz);
+                    line.scale.set(s, s, s);
+                    group.add(line);
+                    break;
+                case 'vertices':
                     // vertices from real points
 
                     var pgeo = points.clone();
-                    var particles = new THREE.Points( pgeo, new THREE.PointsMaterial( { color: color, size: 4 } ) );
-                    particles.position.set( x, y, z + 25 );
-                    particles.rotation.set( rx, ry, rz );
-                    particles.scale.set( s, s, s );
-                    group.add( particles );
-
+                    var particles = new THREE.Points(pgeo, new THREE.PointsMaterial({
+                        color: color,
+                        size: 4
+                    }));
+                    particles.position.set(x, y, z + 25);
+                    particles.rotation.set(rx, ry, rz);
+                    particles.scale.set(s, s, s);
+                    group.add(particles);
+                    break;
+                case 'line':
                     // line from equidistance sampled points
 
-                    var line = new THREE.Line( spacedPoints, new THREE.LineBasicMaterial( { color: color, linewidth: 3 } ) );
-                    line.position.set( x, y, z + 75 );
-                    line.rotation.set( rx, ry, rz );
-                    line.scale.set( s, s, s );
-                    group.add( line );
+                    var line = new THREE.Line(spacedPoints, new THREE.LineBasicMaterial({
+                        color: color,
+                        linewidth: 3
+                    }));
+                    line.position.set(x, y, z + 75);
+                    line.rotation.set(rx, ry, rz);
+                    line.scale.set(s, s, s);
+                    group.add(line);
+                    break;
 
+                case 'points':
                     // equidistance sampled points
 
                     var pgeo = spacedPoints.clone();
-                    var particles2 = new THREE.Points( pgeo, new THREE.PointsMaterial( { color: color, size: 4 } ) );
-                    particles2.position.set( x, y, z + 125 );
-                    particles2.rotation.set( rx, ry, rz );
-                    particles2.scale.set( s, s, s );
-                    group.add( particles2 );
-
-                };
+                    var particles2 = new THREE.Points(pgeo, new THREE.PointsMaterial({
+                        color: color,
+                        size: 4
+                    }));
+                    particles2.position.set(x, y, z + 125);
+                    particles2.rotation.set(rx, ry, rz);
+                    particles2.scale.set(s, s, s);
+                    group.add(particles2);
+                    break;
+            }
+        };
     return {
         init: init
     };

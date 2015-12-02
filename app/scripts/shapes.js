@@ -110,7 +110,7 @@
 
 				// Circle
 
-				var circleRadius = 40;
+				var circleRadius = 100;
 				var circleShape = new THREE.Shape();
 				circleShape.moveTo( 0, circleRadius );
 				circleShape.quadraticCurveTo( circleRadius, circleRadius, circleRadius, 0 );
