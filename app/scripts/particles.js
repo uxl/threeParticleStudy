@@ -1,525 +1,254 @@
-var container, stats;
-var camera, scene, renderer,
-    material_depth;
+/* global console, PARTICLES */
 
-var height = window.innerHeight;
+//todo:
+//complete rigging gui.dat
+//pull in bokeh from this reference:
+//http://jabtunes.com/labs/3d/dof/webgl_postprocessing_dof2.html
 
-var windowHalfX = window.innerWidth / 2;
-var windowHalfY = height / 2;
+'use strict';
 
+var PARTICLES = (function() {
 
-var postprocessing = {
-    enabled: true
-};
+var settings = {},
+  gui = null,
+  img = null,
+  cv = null,
+  ctx = null,
+init = function() {
+settings = {
+    width: 1920,
+    height: 1136,
+    shape: 0,
+    randomrot: true,
+    rotation: 90,
+    vertices: 4,
+    number: 100,
+    maxsize: 100,
+    minsize: 50,
+    hue: 270,
+    saturation: 100,
+    rainbow: rainbow,
+    generate: generate
+  };
 
-var shaderSettings = {
-    rings: 3,
-    samples: 4
-};
+  gui = new dat.GUI();
+  gui.add(settings, "width", 0).step(1);
+  gui.add(settings, "height", 0).step(1);
+  gui.add(settings, "shape", {
+    circle: 0,
+    polygon: 1,
+    star: 2,
+    hearts: 3
+  });
+  gui.add(settings, "randomrot");
+  gui.add(settings, "rotation", 0, 360);
+  gui.add(settings, "vertices", 2, 10).step(1);
+  gui.add(settings, "number", 10, 1000).step(1);
+  gui.add(settings, "maxsize", 1, 200).onChange(update);
+  gui.add(settings, "minsize", 1, 200).onChange(function() {
+    if (settings.minsize > settings.maxsize) this.setValue(settings.maxsize);
+  });
+  gui.add(settings, "hue", 0, 360).onChange(update);
+  gui.add(settings, "saturation", 0, 100).onChange(update);
+  gui.add(settings, "rainbow");
+  gui.add(settings, "generate");
+  update();
 
-var singleMaterial = false;
-var mouse = new THREE.Vector2();
-var raycaster = new THREE.Raycaster();
-var distance = 100;
-var target = new THREE.Vector3(0, 20, -50);
-var effectController;
-var planes = [];
-var leaves = 100;
-var object = null,
-    plane = null,
-    directionalLight,
-    mesh;
+  img = document.getElementById("img");
+  cv = document.createElement("canvas");
 
-init();
-animate();
-
-function init() {
-    //container  
-    container = document.createElement('div');
-    document.body.appendChild(container);
-
-    //camera
-    camera = new THREE.PerspectiveCamera(70, window.innerWidth / height, 1, 3000);
-
-    camera.position.y = window.innerHeight;
-    camera.position.z = 2000;
-
-    scene = new THREE.Scene();
-
-    //renderer
-    renderer = new THREE.WebGLRenderer({
-        antialias: false
-    });
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, height);
-    renderer.sortObjects = false;
-    container.appendChild(renderer.domElement);
-
-    material_depth = new THREE.MeshDepthMaterial();
-
-    //
-
-    object = new THREE.Object3D();
-    scene.add(object);
-
-    // var r = "images/";
-    // var urls = [r + "posx.jpg", r + "negx.jpg",
-    //     r + "posy.jpg", r + "negy.jpg",
-    //     r + "posz.jpg", r + "negz.jpg"
-    // ];
-
-    //var textureCube = THREE.ImageUtils.loadTextureCube(urls);
-    //textureCube.format = THREE.RGBFormat;
-
-    // Skybox
-/*
-    var shader = THREE.ShaderLib["cube"];
-    shader.uniforms["tCube"].value = textureCube;
-
-    var material = new THREE.ShaderMaterial({
-
-        fragmentShader: shader.fragmentShader,
-        vertexShader: shader.vertexShader,
-        uniforms: shader.uniforms,
-        depthWrite: false,
-        side: THREE.BackSide
-
-    });
-
-    mesh = new THREE.Mesh(new THREE.BoxGeometry(1000, 1000, 1000), material);
-    scene.add(mesh);
-    */
-
-    // Focusing Floor
-
-    // var planeGeometry = new THREE.PlaneBufferGeometry( 500, 500, 1, 1 );
-
-    // var planeMat = new THREE.MeshPhongMaterial(
-    //  {  map: texture }
-    // );
-    // var plane = new THREE.Mesh(planeGeometry, planeMat );
-    // plane.rotation.x = - Math.PI / 2;
-    // plane.position.y = - 5;
-
-    // scene.add(plane);
-
-    // Plane particles
-    /*
-    var planePiece = new THREE.PlaneBufferGeometry(10, 10, 1, 1);
-
-    var planeMat = new THREE.MeshPhongMaterial({
-        color: 0xffffff * 0.4,
-        shininess: 0.5,
-        specular: 0xffffff,
-        envMap: textureCube,
-        side: THREE.DoubleSide
-    });
-
-    var rand = Math.random;
-
-    for (var i = 0; i < leaves; i++) {
-        plane = new THREE.Mesh(planePiece, planeMat);
-        plane.rotation.set(rand(), rand(), rand());
-        plane.rotation.dx = rand() * 0.1;
-        plane.rotation.dy = rand() * 0.1;
-        plane.rotation.dz = rand() * 0.1;
-
-        plane.position.set(rand() * 150, 0 + rand() * 300, rand() * 150);
-        plane.position.dx = (rand() - 0.5);
-        plane.position.dz = (rand() - 0.5);
-        scene.add(plane);
-        planes.push(plane);
+  generate();
+},
+update = function() {
+  for (var i in gui.__controllers) {
+    var c = gui.__controllers[i];
+    switch (c.property) {
+      case "hue":
+        c.__foreground.style.backgroundColor = "hsl(" + settings.hue + ", 100%, 50%)";
+        break;
+      case "saturation":
+        c.__foreground.style.backgroundColor = "hsl(" + settings.hue + ", " + settings.saturation + "%, 50%)";
+        break;
+      case "minsize":
+        c.setValue(settings.maxsize / 2);
+        /*              c.__max = settings.maxsize; */
+        break;
     }
-*/
-    // var geometry = new THREE.SphereGeometry( 5, 32, 32 );
-    // var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
-    // var sphere = new THREE.Mesh( geometry, material );
-    // scene.add( sphere );
+  }
+},
+generate = function() {
+  cv.width = settings.width;
+  cv.height = 3 * settings.height;
+  ctx = cv.getContext("2d");
+  ctx.fillStyle = "000";
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineWidth = 3;
+  ctx.shadowColor = "hsl(0, 0%, 50%)";
+  ctx.shadowOffsetY = -settings.height;
 
-    // Adding Monkeys
+  for (var i = 0; i < settings.number; i++) {
+    var x = Math.floor(settings.width * Math.random()),
+      y = Math.floor(settings.height * Math.random()),
+      r = settings.maxsize - (settings.maxsize - settings.minsize) * Math.random();
 
-    var loader2 = new THREE.JSONLoader();
-    loader2.load('images/Suzanne.js', function(geometry) {
+    bokeh(x, y, r, settings.shape, settings.vertices, settings.randomrot, Math.PI * settings.rotation / 180);
+  }
 
-        var material = new THREE.MeshLambertMaterial({
-            color: 0x006699,
-            transparent: true,
-            opacity: 0.6
-            //specular: 0xffffff,
-            //envMap: textureCube,
-            //combine: THREE.MultiplyOperation,
-            //shininess: 50,
-            //reflectivity: 1.0
-            //blending: THREE.AdditiveBlending
+  colorize(settings.hue, settings.saturation);
+  img.style.maxHeight = settings.height + "px";
+  img.style.height = window.innerHeight + "px";
+  img.style.marginTop = -Math.min(settings.height, window.innerHeight) / 2 + "px";
+  img.style.marginLeft = -Math.min(settings.width, settings.width * window.innerHeight / settings.height) / 2 + "px";
+},
 
-        });
-        material.blending = THREE.AdditiveBlending;
+bokeh = function(x, y, r, t, s, rr, ro) {
+  ctx.shadowBlur = r / settings.minsize * (Math.random() * 9.9 + 0.1);
 
-        var monkeys = 5;
-        var geometry = new THREE.SphereGeometry( 5, 32, 32 );
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+  ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
 
-        for (var i = 0; i < monkeys; i++) {
+  ctx.save();
+  ctx.translate(x, y + settings.height);
+  ctx.beginPath();
+  switch (parseInt(t)) {
+    case 0:
+      ctx.arc(0, 0, r, 0, 2 * Math.PI);
+      break;
+    case 1:
+      polygon(r, s, rr, ro);
+      break;
+    case 2:
+      nstar(r, s, rr, ro);
+      break;
+    case 3:
+      heart(r, rr, ro);
+      break;
+  }
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+},
+polygon = function(r, s, rr, ro) {
+  var a = 2 * Math.PI / s;
 
-            var mesh = new THREE.Mesh(geometry, material);
-            mesh.scale.multiplyScalar(5);
+  ctx.rotate(rr * (1 - 2 * Math.random()) * Math.PI + a / 2 + ro);
 
+  ctx.moveTo(0, r);
+  for (var i = 0; i < s; i++) {
+    ctx.rotate(a);
+    ctx.lineTo(0, r);
+  }
+},
+nstar = function(r, s, rr, ro) {
+  var a = 2 * Math.PI / s;
 
-            mesh.position.z = Math.cos(i / monkeys * Math.PI * 2) * 200;
-            mesh.position.y = Math.sin(i / monkeys * Math.PI * 3) * 20;
-            mesh.position.x = Math.sin(i / monkeys * Math.PI * 2) * 200;
+  ctx.rotate(rr * (1 - 2 * Math.random()) * Math.PI + a / 2 + ro);
 
-            mesh.rotation.x = Math.PI / 2;
-            mesh.rotation.z = -i / monkeys * Math.PI * 2;
+  ctx.moveTo(0, r);
+  for (var i = 0; i < 2 * s; i++) {
+    ctx.rotate(a / 2);
+    ctx.lineTo(0, r - (i % 2 == 0) * 2 * r / 3);
+  }
+},
+heart = function(r, rr, ro) {
+  ctx.rotate(rr * (1 - 2 * Math.random()) * Math.PI + ro);
 
-            object.add(mesh);
+  ctx.moveTo(0, 3 * r / 2);
+  ctx.arc(-r / 2, 0, r / 2, 3 * Math.PI / 4, 0);
+  ctx.arc(r / 2, 0, r / 2, Math.PI, Math.PI / 4);
+  ctx.lineTo(0, 3 * r / 2);
+},
+ colorize = function(h, s) {
+  var img = ctx.getImageData(0, 0, settings.width, settings.height),
+    data = img.data;
+  for (var i = 0; i < data.length; i += 4) {
+    var l = RTH(data[i + 0], data[i + 1], data[i + 2]).l;
+    var rgb = HTR(h / 360, s / 100, l);
+    data[i + 0] = rgb.r;
+    data[i + 1] = rgb.g;
+    data[i + 2] = rgb.b;
+  }
+  cv.height = settings.height;
+  ctx.putImageData(img, 0, 0);
+  document.getElementById("img").src = cv.toDataURL();
+},
+ rainbow = function() {
+  var img = ctx.getImageData(0, 0, cv.width, cv.height),
+    data = img.data;
+  for (var i = 0; i < data.length; i += 4) {
+    var p = i / 4,
+      x = p % cv.width,
+      y = Math.floor(p / cv.width),
+      h = (y / cv.height),
+      rgb = HTR(h % 1, 1.0, RTH(data[i + 0], data[i + 1], data[i + 2]).l);
+    data[i + 0] = rgb.r;
+    data[i + 1] = rgb.g;
+    data[i + 2] = rgb.b;
+  }
+  ctx.putImageData(img, 0, 0);
+  document.getElementById("img").src = cv.toDataURL();
+},
 
-        }
-
-    });
-
-
-/*
-    // Add Balls
-    var geometry = new THREE.SphereGeometry(1, 20, 20);
-
-    for (var i = 0; i < 20; i++) {
-        // MeshPhongMaterial
-        var ballmaterial = new THREE.MeshPhongMaterial({
-            color: 0xffffff * Math.random(),
-            shininess: 0.5,
-            specular: 0xffffff,
-            envMap: textureCube
-        });
-
-
-        var mesh = new THREE.Mesh(geometry, ballmaterial);
-
-        mesh.position.set(
-            (Math.random() - 0.5) * 200,
-            Math.random() * 50, (Math.random() - 0.5) * 200
-        );
-
-        mesh.scale.multiplyScalar(10);
-        object.add(mesh);
-
+// RGB and HSL functions from
+// https://gist.github.com/mjijackson/5311256
+RTH = function(r, g, b) {
+  r /= 255, g /= 255, b /= 255;
+  var max = Math.max(r, g, b),
+    min = Math.min(r, g, b);
+  var h, s, l = (max + min) / 2;
+  if (max == min) {
+    h = s = 0;
+  } else {
+    var d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
     }
-*/
-    // Lights
+    h /= 6;
+  }
+  return {
+    h: h,
+    s: s,
+    l: l
+  };
+},
 
-    // scene.add( new THREE.AmbientLight( 0xffffff ) );
-
-    // light = new THREE.DirectionalLight( 0xffffff );
-    // light.position.set( 1, 1, 1 );
-    // scene.add( light );
-
-    scene.add(new THREE.AmbientLight(0x222222));
-
-    directionalLight = new THREE.DirectionalLight(0xffffff, 2);
-    directionalLight.position.set(2, 1.2, 10).normalize();
-    scene.add(directionalLight);
-
-    directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(-2, 1.2, -10).normalize();
-    scene.add(directionalLight);
-
-
-    initPostprocessing();
-
-    renderer.autoClear = false;
-
-    renderer.domElement.style.position = 'absolute';
-    renderer.domElement.style.left = "0px";
-
-    stats = new Stats();
-    stats.domElement.style.position = 'absolute';
-    stats.domElement.style.top = '0px';
-    container.appendChild(stats.domElement);
-
-    document.addEventListener('mousemove', onDocumentMouseMove, false);
-    document.addEventListener('touchstart', onDocumentTouchStart, false);
-    document.addEventListener('touchmove', onDocumentTouchMove, false);
-
-    effectController = {
-
-        enabled: true,
-        jsDepthCalculation: true,
-        shaderFocus: false,
-
-        fstop: 2.2,
-        maxblur: 1.0,
-
-        showFocus: false,
-        focalDepth: 2.8,
-        manualdof: false,
-        vignetting: false,
-        depthblur: false,
-
-        threshold: 0.5,
-        gain: 2.0,
-        bias: 0.5,
-        fringe: 0.7,
-
-        focalLength: 35,
-        noise: true,
-        pentagon: false,
-
-        dithering: 0.0001
-
+HTR = function(h, s, l) {
+  var r, g, b;
+  if (s == 0) {
+    r = g = b = l;
+  } else {
+    function hue2rgb(p, q, t) {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    }
+    var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    var p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1 / 3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1 / 3);
+  }
+  return {
+    r: r * 255,
+    g: g * 255,
+    b: b * 255
+  };
     };
-
-    var matChanger = function() {
-
-        for (var e in effectController) {
-            if (e in postprocessing.bokeh_uniforms)
-                postprocessing.bokeh_uniforms[e].value = effectController[e];
-        }
-
-        postprocessing.enabled = effectController.enabled;
-        postprocessing.bokeh_uniforms['znear'].value = camera.near;
-        postprocessing.bokeh_uniforms['zfar'].value = camera.far;
-        camera.setLens(effectController.focalLength);
-
+    return {
+        init: init
     };
-
-    var gui = new dat.GUI();
-
-    gui.add(effectController, "enabled").onChange(matChanger);
-    gui.add(effectController, "jsDepthCalculation").onChange(matChanger);
-    gui.add(effectController, "shaderFocus").onChange(matChanger);
-    gui.add(effectController, "focalDepth", 0.0, 200.0).listen().onChange(matChanger);
-
-    gui.add(effectController, "fstop", 0.1, 22, 0.001).onChange(matChanger);
-    gui.add(effectController, "maxblur", 0.0, 5.0, 0.025).onChange(matChanger);
-
-    gui.add(effectController, "showFocus").onChange(matChanger);
-    gui.add(effectController, "manualdof").onChange(matChanger);
-    gui.add(effectController, "vignetting").onChange(matChanger);
-
-    gui.add(effectController, "depthblur").onChange(matChanger);
-
-    gui.add(effectController, "threshold", 0, 1, 0.001).onChange(matChanger);
-    gui.add(effectController, "gain", 0, 100, 0.001).onChange(matChanger);
-    gui.add(effectController, "bias", 0, 3, 0.001).onChange(matChanger);
-    gui.add(effectController, "fringe", 0, 5, 0.001).onChange(matChanger);
-
-    gui.add(effectController, "focalLength", 16, 80, 0.001).onChange(matChanger);
-
-    gui.add(effectController, "noise").onChange(matChanger);
-
-    gui.add(effectController, "dithering", 0, 0.001, 0.0001).onChange(matChanger);
-
-    gui.add(effectController, "pentagon").onChange(matChanger);
-
-    gui.add(shaderSettings, "rings", 1, 8).step(1).onChange(shaderUpdate);
-    gui.add(shaderSettings, "samples", 1, 13).step(1).onChange(shaderUpdate);
-
-    matChanger();
-
-    window.addEventListener('resize', onWindowResize, false);
-
-}
-
-function onWindowResize() {
-
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-}
-
-function onDocumentMouseMove(event) {
-
-    mouse.x = (event.clientX - windowHalfX) / windowHalfX;
-    mouse.y = -(event.clientY - windowHalfY) / windowHalfY;
-
-    postprocessing.bokeh_uniforms['focusCoords'].value.set(event.clientX / window.innerWidth, 1 - event.clientY / window.innerHeight);
-
-}
-
-function onDocumentTouchStart(event) {
-
-    if (event.touches.length == 1) {
-
-        event.preventDefault();
-
-        mouse.x = (event.touches[0].pageX - windowHalfX) / windowHalfX;
-        mouse.y = -(event.touches[0].pageY - windowHalfY) / windowHalfY;
-
-    }
-}
-
-function onDocumentTouchMove(event) {
-
-    if (event.touches.length == 1) {
-
-        event.preventDefault();
-
-        mouse.x = (event.touches[0].pageX - windowHalfX) / windowHalfX;
-        mouse.y = -(event.touches[0].pageY - windowHalfY) / windowHalfY;
-
-    }
-
-}
-
-function initPostprocessing() {
-
-    postprocessing.scene = new THREE.Scene();
-
-    postprocessing.camera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, -10000, 10000);
-    postprocessing.camera.position.z = 100;
-
-    postprocessing.scene.add(postprocessing.camera);
-
-    var pars = {
-        minFilter: THREE.LinearFilter,
-        magFilter: THREE.LinearFilter,
-        format: THREE.RGBFormat
-    };
-    postprocessing.rtTextureDepth = new THREE.WebGLRenderTarget(window.innerWidth, height, pars);
-    postprocessing.rtTextureColor = new THREE.WebGLRenderTarget(window.innerWidth, height, pars);
-
-
-
-    var bokeh_shader = THREE.BokehShader;
-
-    postprocessing.bokeh_uniforms = THREE.UniformsUtils.clone(bokeh_shader.uniforms);
-
-    postprocessing.bokeh_uniforms["tColor"].value = postprocessing.rtTextureColor;
-    postprocessing.bokeh_uniforms["tDepth"].value = postprocessing.rtTextureDepth;
-
-    postprocessing.bokeh_uniforms["textureWidth"].value = window.innerWidth;
-
-    postprocessing.bokeh_uniforms["textureHeight"].value = height;
-
-    postprocessing.materialBokeh = new THREE.ShaderMaterial({
-
-        uniforms: postprocessing.bokeh_uniforms,
-        vertexShader: bokeh_shader.vertexShader,
-        fragmentShader: bokeh_shader.fragmentShader,
-        defines: {
-            RINGS: shaderSettings.rings,
-            SAMPLES: shaderSettings.samples
-        }
-
-    });
-
-    postprocessing.quad = new THREE.Mesh(new THREE.PlaneBufferGeometry(window.innerWidth, window.innerHeight), postprocessing.materialBokeh);
-    postprocessing.quad.position.z = -500;
-    postprocessing.scene.add(postprocessing.quad);
-
-}
-
-function shaderUpdate() {
-    postprocessing.materialBokeh.defines.RINGS = shaderSettings.rings;
-    postprocessing.materialBokeh.defines.SAMPLES = shaderSettings.samples;
-
-    postprocessing.materialBokeh.needsUpdate = true;
-
-}
-
-function animate() {
-
-    requestAnimationFrame(animate, renderer.domElement);
-
-    render();
-    stats.update();
-
-}
-
-function linearize(depth) {
-    var zfar = camera.far;
-    var znear = camera.near;
-    return -zfar * znear / (depth * (zfar - znear) - zfar);
-}
-
-
-function smoothstep(near, far, depth) {
-    var x = saturate((depth - near) / (far - near));
-    return x * x * (3 - 2 * x);
-}
-
-function saturate(x) {
-    return Math.max(0, Math.min(1, x));
-}
-
-function render() {
-
-    var time = Date.now() * 0.00015;
-
-    camera.position.x = Math.cos(time) * 400;
-    camera.position.z = Math.sin(time) * 500;
-    camera.position.y = Math.sin(time / 1.4) * 100;
-
-    camera.lookAt(target);
-
-    camera.updateMatrixWorld();
-
-    if (effectController.jsDepthCalculation) {
-
-        raycaster.setFromCamera(mouse, camera);
-
-        var intersects = raycaster.intersectObjects(scene.children, true);
-
-
-        if (intersects.length > 0) {
-
-            var targetDistance = intersects[0].distance;
-
-            distance += (targetDistance - distance) * 0.03;
-
-            var sdistance = smoothstep(camera.near, camera.far, distance);
-
-            var ldistance = linearize(1 - sdistance);
-
-            // (Math.random() < 0.1) && console.log('moo', targetDistance, distance, ldistance);
-
-            postprocessing.bokeh_uniforms['focalDepth'].value = ldistance;
-
-            effectController['focalDepth'] = ldistance;
-
-        }
-
-    }
-
-    // for (var i = 0; i < leaves; i++) {
-    //     plane = planes[i];
-    //     plane.rotation.x += plane.rotation.dx;
-    //     plane.rotation.y += plane.rotation.dy;
-    //     plane.rotation.z += plane.rotation.dz;
-    //     plane.position.y -= 2;
-    //     plane.position.x += plane.position.dx;
-    //     plane.position.z += plane.position.dz;
-    //     if (plane.position.y < 0) plane.position.y += 300;
-    // }
-
-
-    if (postprocessing.enabled) {
-
-        renderer.clear();
-
-        // Render scene into texture
-
-        scene.overrideMaterial = null;
-        renderer.render(scene, camera, postprocessing.rtTextureColor, true);
-
-        // Render depth into texture
-
-        scene.overrideMaterial = material_depth;
-        renderer.render(scene, camera, postprocessing.rtTextureDepth, true);
-
-        // Render bokeh composite
-
-        renderer.render(postprocessing.scene, postprocessing.camera);
-
-
-    } else {
-
-        scene.overrideMaterial = null;
-
-        renderer.clear();
-        renderer.render(scene, camera);
-
-    }
-
-}
+}());
