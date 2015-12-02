@@ -14,6 +14,14 @@ var settings = {},
   img = null,
   cv = null,
   ctx = null,
+  container, 
+  camera,
+  scene,
+  windowHalfX,
+  windowHalfY,
+  mouseX,
+  mouseY,
+
 init = function() {
 settings = {
     width: 1920,
@@ -30,6 +38,26 @@ settings = {
     rainbow: rainbow,
     generate: generate
   };
+
+ //add dom elements
+            windowHalfX = window.innerWidth / 2;
+            windowHalfY = window.innerHeight / 2;
+
+            container = document.createElement('div');
+            container.id = "particles";
+            document.body.appendChild(container);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 5000);
+            camera.position.z = 1000;
+
+            scene = new THREE.Scene();
+
+            //user events
+            document.addEventListener('mousemove', onDocumentMouseMove, false);
+            document.addEventListener('touchstart', onDocumentTouchStart, false);
+            document.addEventListener('touchmove', onDocumentTouchMove, false);
+
+            window.addEventListener('resize', onWindowResize, false);
 
   gui = new dat.GUI();
   gui.add(settings, "width", 0).step(1);
@@ -247,7 +275,48 @@ HTR = function(h, s, l) {
     g: g * 255,
     b: b * 255
   };
-    };
+    },
+     onDocumentMouseMove = function(event) {
+
+            mouseX = event.clientX - windowHalfX;
+            mouseY = event.clientY - windowHalfY;
+        },
+
+        onDocumentTouchStart = function(event) {
+
+            if (event.touches.length == 1) {
+
+                event.preventDefault();
+
+                mouseX = event.touches[0].pageX - windowHalfX;
+                mouseY = event.touches[0].pageY - windowHalfY;
+
+            }
+
+        },
+
+        onDocumentTouchMove = function(event) {
+
+            if (event.touches.length == 1) {
+
+                event.preventDefault();
+
+                mouseX = event.touches[0].pageX - windowHalfX;
+                mouseY = event.touches[0].pageY - windowHalfY;
+
+            }
+        },
+        onWindowResize = function() {
+
+            windowHalfX = window.innerWidth / 2;
+            windowHalfY = window.innerHeight / 2;
+
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+        };
     return {
         init: init
     };
