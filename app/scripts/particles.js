@@ -27,7 +27,8 @@ var PARTICLES = (function() {
         raycaster = null,
         resetMe = false, 
         me = null,
-
+        group = null,
+        texture = null,
         init = function() {
             settings = {
                 width: 200,
@@ -41,8 +42,7 @@ var PARTICLES = (function() {
                 minsize: 50,
                 hue: 215,
                 saturation: 100,
-                rainbow: rainbow,
-                generate: generate
+                rainbow: rainbow
             };
 
             windowHalfX = window.innerWidth / 2;
@@ -52,7 +52,7 @@ var PARTICLES = (function() {
             container.id = "particles";
             document.body.appendChild(container);
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer = new THREE.WebGLRenderer();
             renderer.setSize(window.innerWidth, window.innerHeight);
             container.appendChild(renderer.domElement);
 
@@ -62,17 +62,17 @@ var PARTICLES = (function() {
             var cubeMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
             var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
             cube.rotation.y = Math.PI * 45 / 180;
-            cube.position.y = 20;
+            cube.position.y = 100;
             scene.add(cube);
 
             //bokeh
             cv = document.createElement("canvas");
 
-            generate();
+            //generate();
            
             var cubeGeometry = new THREE.BoxGeometry(100, 100, 100);
             var cubeMaterial = new THREE.MeshLambertMaterial({color: 0xFF0000 });
-            // cubeMaterial.map = new THREE.Texture(cv);
+            // cubeMaterial.map = new THREE.Texture();
             // var canvasCube = new THREE.Mesh(cubeGeometry, cubeMaterial);
             //  var material = new THREE.MeshBasicMaterial({
             //         map: texture,
@@ -80,10 +80,39 @@ var PARTICLES = (function() {
 
             //         overdraw: false
             //     });
-                var mesh = new THREE.Mesh(cubeGeometry, cubeMaterial);
-                mesh.rotation.y = 45;
-                scene.add(mesh);
-  
+            var mesh = new THREE.Mesh(cubeGeometry, cubeMaterial);
+            mesh.rotation.y = 45;
+            cube.position.y = -100;
+            scene.add(mesh);
+             
+
+            //shapes 
+            group = new THREE.Group();
+            group.position.y = 50;
+            scene.add( group );
+
+            texture = THREE.ImageUtils.loadTexture( "images/UV_Grid_Sm.jpg" );
+            texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set( 0.008, 0.008 );
+
+            var extrudeSettings = { amount: 8, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: 1, bevelThickness: 1 };
+
+            // addShape( shape, color, x, y, z, rx, ry,rz, s );
+
+            addShape( californiaShape,  extrudeSettings, 0xf08000, -300, -100, 0, 0, 0, 0, 1 );
+            addShape( triangleShape,    extrudeSettings, 0x8080f0, -180,    0, 0, 0, 0, 0, 1 );
+            addShape( roundedRectShape, extrudeSettings, 0x008000, -150,  150, 0, 0, 0, 0, 1 );
+            addShape( trackShape,       extrudeSettings, 0x008080,  200, -100, 0, 0, 0, 0, 1 );
+            addShape( squareShape,      extrudeSettings, 0x0040f0,  150,  100, 0, 0, 0, 0, 1 );
+            addShape( heartShape,       extrudeSettings, 0xf00000,   60,  100, 0, 0, 0, Math.PI, 1 );
+            addShape( circleShape,      extrudeSettings, 0x00f000,  120,  250, 0, 0, 0, 0, 1 );
+            addShape( fishShape,        extrudeSettings, 0x404040,  -60,  200, 0, 0, 0, 0, 1 );
+            addShape( smileyShape,      extrudeSettings, 0xf000f0, -200,  250, 0, 0, 0, Math.PI, 1 );
+            addShape( arcShape,         extrudeSettings, 0x804000,  150,    0, 0, 0, 0, 0, 1 );
+            addShape( splineShape,      extrudeSettings, 0x808080,  -50, -100, 0, 0, 0, 0, 1 );
+
+            //
+
 
 
             camera = new THREE.PerspectiveCamera(45, settings.width / settings.height, 0.1, 10000);
@@ -133,7 +162,7 @@ var PARTICLES = (function() {
             gui.add(settings, "hue", 0, 360).onChange(update);
             gui.add(settings, "saturation", 0, 100).onChange(update);
             gui.add(settings, "rainbow");
-            gui.add(settings, "generate");
+            //gui.add(settings, "generate");
 
             //add renderer
             // renderer = new THREE.CanvasRenderer();
@@ -153,6 +182,51 @@ var PARTICLES = (function() {
 
             //
             animate();
+
+        },
+
+        createParticles = function() {
+            var material = new THREE.SpriteMaterial({
+                map: new THREE.CanvasTexture(generateSprite()),
+                blending: THREE.AdditiveBlending
+            });
+
+            for (var i = 0; i < settings.number; i++) {
+                //console.log('creating: ' + i);
+                particle = new THREE.Sprite(material);
+
+                particle.name = "part" + i;
+
+                initParticle(particle, i * 10);
+                scene.add(particle);
+            }
+        },
+         generateSprite = function() {
+
+            var canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 200;
+
+            var context = canvas.getContext('2d');
+
+            context.fillStyle = "000";
+            context.globalCompositeOperation = 'source-over';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.globalCompositeOperation = 'lighter';
+            context.lineWidth = 3;
+            context.shadowColor = "hsl(0, 0%, 50%)";
+            context.shadowOffsetY = -settings.height;
+
+            var gradient = context.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2);
+            gradient.addColorStop(0, 'rgba(255,255,100,0.5)');
+            gradient.addColorStop(0.2, 'rgba(255,255,100,0.5)');
+            gradient.addColorStop(0.8, 'rgba(255,255,100,0.5)');
+            gradient.addColorStop(1, 'rgba(255,255,100,0)');
+
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            return canvas;
 
         },
         update = function() {
@@ -199,94 +273,6 @@ var PARTICLES = (function() {
 
             return canvas;
 
-        },
-        generate = function() {
-            cv.width = settings.width;
-            cv.height = settings.height;
-            ctx = cv.getContext("2d");
-            ctx.fillStyle = "003399";
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.fillRect(0, 0, cv.width, cv.height);
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.lineWidth = 3;
-            ctx.shadowColor = "hsl(0, 0%, 50%)";
-            ctx.shadowOffsetY = -settings.height;
-
-            // for (var i = 0; i < settings.number; i++) {
-            //     var x = Math.floor(settings.width * Math.random()),
-            //         y = Math.floor(settings.height * Math.random()),
-            //         r = settings.maxsize - (settings.maxsize - settings.minsize) * Math.random();
-
-            //     bokeh(x, y, r, settings.shape, settings.vertices, settings.randomrot, Math.PI * settings.rotation / 180);
-            // }
-                var x = Math.floor(settings.width * Math.random()),
-                    y = Math.floor(settings.height * Math.random()),
-                    r = settings.maxsize - (settings.maxsize - settings.minsize) * Math.random();
-
-                bokeh(x, y, r, settings.shape, settings.vertices, settings.randomrot, Math.PI * settings.rotation / 180);
-                
-        //     colorize(settings.hue, settings.saturation);
-        //     img.style.maxHeight = settings.height + "px";
-        //     img.style.height = window.innerHeight + "px";
-        //     img.style.marginTop = -Math.min(settings.height, window.innerHeight) / 2 + "px";
-        //     img.style.marginLeft = -Math.min(settings.width, settings.width * window.innerHeight / settings.height) / 2 + "px";
-        },
-        bokeh = function(x, y, r, t, s, rr, ro) {
-            ctx.shadowBlur = r / settings.minsize * (Math.random() * 9.9 + 0.1);
-
-            ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
-            ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-
-            ctx.save();
-            ctx.translate(x, y + settings.height);
-            ctx.beginPath();
-            switch (parseInt(t)) {
-                case 0:
-                    ctx.arc(0, 0, r, 0, 2 * Math.PI);
-                    break;
-                case 1:
-                    polygon(r, s, rr, ro);
-                    break;
-                case 2:
-                    nstar(r, s, rr, ro);
-                    break;
-                case 3:
-                    heart(r, rr, ro);
-                    break;
-            }
-            ctx.fill();
-            ctx.stroke();
-            ctx.restore();
-        },
-        polygon = function(r, s, rr, ro) {
-            var a = 2 * Math.PI / s;
-
-            ctx.rotate(rr * (1 - 2 * Math.random()) * Math.PI + a / 2 + ro);
-
-            ctx.moveTo(0, r);
-            for (var i = 0; i < s; i++) {
-                ctx.rotate(a);
-                ctx.lineTo(0, r);
-            }
-        },
-        nstar = function(r, s, rr, ro) {
-            var a = 2 * Math.PI / s;
-
-            ctx.rotate(rr * (1 - 2 * Math.random()) * Math.PI + a / 2 + ro);
-
-            ctx.moveTo(0, r);
-            for (var i = 0; i < 2 * s; i++) {
-                ctx.rotate(a / 2);
-                ctx.lineTo(0, r - (i % 2 == 0) * 2 * r / 3);
-            }
-        },
-        heart = function(r, rr, ro) {
-            ctx.rotate(rr * (1 - 2 * Math.random()) * Math.PI + ro);
-
-            ctx.moveTo(0, 3 * r / 2);
-            ctx.arc(-r / 2, 0, r / 2, 3 * Math.PI / 4, 0);
-            ctx.arc(r / 2, 0, r / 2, Math.PI, Math.PI / 4);
-            ctx.lineTo(0, 3 * r / 2);
         },
         colorize = function(h, s) {
             var img = ctx.getImageData(0, 0, settings.width, settings.height),
@@ -439,7 +425,78 @@ var PARTICLES = (function() {
 
             renderer.render(scene, camera);
 
-        };
+        },
+        addShape = function( shape, extrudeSettings, color, x, y, z, rx, ry, rz, s ) {
+
+                    var points = shape.createPointsGeometry();
+                    var spacedPoints = shape.createSpacedPointsGeometry( 50 );
+
+                    // flat shape with texture
+                    // note: default UVs generated by ShapeGemoetry are simply the x- and y-coordinates of the vertices
+
+                    var geometry = new THREE.ShapeGeometry( shape );
+
+                    var mesh = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { side: THREE.DoubleSide, map: texture } ) );
+                    mesh.position.set( x, y, z - 175 );
+                    mesh.rotation.set( rx, ry, rz );
+                    mesh.scale.set( s, s, s );
+                    group.add( mesh );
+
+                    // flat shape
+
+                    var geometry = new THREE.ShapeGeometry( shape );
+
+                    var mesh = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { color: color, side: THREE.DoubleSide } ) );
+                    mesh.position.set( x, y, z - 125 );
+                    mesh.rotation.set( rx, ry, rz );
+                    mesh.scale.set( s, s, s );
+                    group.add( mesh );
+
+                    // 3d shape
+
+                    var geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+
+                    var mesh = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { color: color } ) );
+                    mesh.position.set( x, y, z - 75 );
+                    mesh.rotation.set( rx, ry, rz );
+                    mesh.scale.set( s, s, s );
+                    group.add( mesh );
+
+                    // solid line
+
+                    var line = new THREE.Line( points, new THREE.LineBasicMaterial( { color: color, linewidth: 3 } ) );
+                    line.position.set( x, y, z - 25 );
+                    line.rotation.set( rx, ry, rz );
+                    line.scale.set( s, s, s );
+                    group.add( line );
+
+                    // vertices from real points
+
+                    var pgeo = points.clone();
+                    var particles = new THREE.Points( pgeo, new THREE.PointsMaterial( { color: color, size: 4 } ) );
+                    particles.position.set( x, y, z + 25 );
+                    particles.rotation.set( rx, ry, rz );
+                    particles.scale.set( s, s, s );
+                    group.add( particles );
+
+                    // line from equidistance sampled points
+
+                    var line = new THREE.Line( spacedPoints, new THREE.LineBasicMaterial( { color: color, linewidth: 3 } ) );
+                    line.position.set( x, y, z + 75 );
+                    line.rotation.set( rx, ry, rz );
+                    line.scale.set( s, s, s );
+                    group.add( line );
+
+                    // equidistance sampled points
+
+                    var pgeo = spacedPoints.clone();
+                    var particles2 = new THREE.Points( pgeo, new THREE.PointsMaterial( { color: color, size: 4 } ) );
+                    particles2.position.set( x, y, z + 125 );
+                    particles2.rotation.set( rx, ry, rz );
+                    particles2.scale.set( s, s, s );
+                    group.add( particles2 );
+
+                };
     return {
         init: init
     };
