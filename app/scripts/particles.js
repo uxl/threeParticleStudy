@@ -26,12 +26,13 @@ var PARTICLES = (function() {
         stats = null,
         raycaster = null,
         resetMe = false, 
+        me = null,
 
         init = function() {
             settings = {
-                width: window.innerWidth,
-                height: window.innerHeight,
-                shape: 0,
+                width: 200,
+                height: 200,
+                shape: 3,
                 randomrot: true,
                 rotation: 90,
                 vertices: 4,
@@ -52,7 +53,7 @@ var PARTICLES = (function() {
             document.body.appendChild(container);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(settings.width, settings.height);
+            renderer.setSize(window.innerWidth, window.innerHeight);
             container.appendChild(renderer.domElement);
 
             scene = new THREE.Scene;
@@ -61,12 +62,34 @@ var PARTICLES = (function() {
             var cubeMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
             var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
             cube.rotation.y = Math.PI * 45 / 180;
+            cube.position.y = 20;
             scene.add(cube);
+
+            //bokeh
+            cv = document.createElement("canvas");
+
+            generate();
+           
+            var cubeGeometry = new THREE.BoxGeometry(100, 100, 100);
+            var cubeMaterial = new THREE.MeshLambertMaterial({color: 0xFF0000 });
+            // cubeMaterial.map = new THREE.Texture(cv);
+            // var canvasCube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+            //  var material = new THREE.MeshBasicMaterial({
+            //         map: texture,
+            //                         side: THREE.FrontSide,
+
+            //         overdraw: false
+            //     });
+                var mesh = new THREE.Mesh(cubeGeometry, cubeMaterial);
+                mesh.rotation.y = 45;
+                scene.add(mesh);
+  
+
 
             camera = new THREE.PerspectiveCamera(45, settings.width / settings.height, 0.1, 10000);
             camera.position.y = 160;
             camera.position.z = 400;
-            camera.lookAt(cube.position);
+            camera.lookAt(mesh.position);
 
             scene.add(camera);
 
@@ -83,7 +106,6 @@ var PARTICLES = (function() {
 
             var clock = new THREE.Clock;
 
-          
             //user events
             document.addEventListener('mousemove', onDocumentMouseMove, false);
             document.addEventListener('touchstart', onDocumentTouchStart, false);
@@ -125,28 +147,9 @@ var PARTICLES = (function() {
             stats.domElement.style.position = 'absolute';
             stats.domElement.style.top = '0px';
             container.appendChild(stats.domElement);
-
-
             camera.position.x += (mouseX - camera.position.x) * 0.05;
             camera.position.y += (-mouseY - camera.position.y) * 0.05;
             camera.lookAt(scene.position);
-            
-
-            //renderer.render(scene, camera);
-            /*
-            animate();
-            */
-
-            //update();
-
-            //img = document.getElementById("img");
-
-            //cv = document.createElement("canvas");
-
-            //generate();
-
-            
-
 
             //
             animate();
@@ -169,11 +172,39 @@ var PARTICLES = (function() {
                 }
             }
         },
+        generateSprite = function() {
+
+            var canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 200;
+
+            var context = canvas.getContext('2d');
+
+            context.fillStyle = "000";
+            context.globalCompositeOperation = 'source-over';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.globalCompositeOperation = 'lighter';
+            context.lineWidth = 3;
+            context.shadowColor = "hsl(0, 0%, 50%)";
+            context.shadowOffsetY = -settings.height;
+
+            // var gradient = context.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2);
+            // gradient.addColorStop(0, 'rgba(255,255,100,0.5)');
+            // gradient.addColorStop(0.2, 'rgba(255,255,100,0.5)');
+            // gradient.addColorStop(0.8, 'rgba(255,255,100,0.5)');
+            // gradient.addColorStop(1, 'rgba(255,255,100,0)');
+
+            context.fillStyle = 'white';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            return canvas;
+
+        },
         generate = function() {
             cv.width = settings.width;
-            cv.height = 3 * settings.height;
+            cv.height = settings.height;
             ctx = cv.getContext("2d");
-            ctx.fillStyle = "000";
+            ctx.fillStyle = "003399";
             ctx.globalCompositeOperation = 'source-over';
             ctx.fillRect(0, 0, cv.width, cv.height);
             ctx.globalCompositeOperation = 'lighter';
@@ -181,21 +212,25 @@ var PARTICLES = (function() {
             ctx.shadowColor = "hsl(0, 0%, 50%)";
             ctx.shadowOffsetY = -settings.height;
 
-            for (var i = 0; i < settings.number; i++) {
+            // for (var i = 0; i < settings.number; i++) {
+            //     var x = Math.floor(settings.width * Math.random()),
+            //         y = Math.floor(settings.height * Math.random()),
+            //         r = settings.maxsize - (settings.maxsize - settings.minsize) * Math.random();
+
+            //     bokeh(x, y, r, settings.shape, settings.vertices, settings.randomrot, Math.PI * settings.rotation / 180);
+            // }
                 var x = Math.floor(settings.width * Math.random()),
                     y = Math.floor(settings.height * Math.random()),
                     r = settings.maxsize - (settings.maxsize - settings.minsize) * Math.random();
 
                 bokeh(x, y, r, settings.shape, settings.vertices, settings.randomrot, Math.PI * settings.rotation / 180);
-            }
-
-            colorize(settings.hue, settings.saturation);
-            img.style.maxHeight = settings.height + "px";
-            img.style.height = window.innerHeight + "px";
-            img.style.marginTop = -Math.min(settings.height, window.innerHeight) / 2 + "px";
-            img.style.marginLeft = -Math.min(settings.width, settings.width * window.innerHeight / settings.height) / 2 + "px";
+                
+        //     colorize(settings.hue, settings.saturation);
+        //     img.style.maxHeight = settings.height + "px";
+        //     img.style.height = window.innerHeight + "px";
+        //     img.style.marginTop = -Math.min(settings.height, window.innerHeight) / 2 + "px";
+        //     img.style.marginLeft = -Math.min(settings.width, settings.width * window.innerHeight / settings.height) / 2 + "px";
         },
-
         bokeh = function(x, y, r, t, s, rr, ro) {
             ctx.shadowBlur = r / settings.minsize * (Math.random() * 9.9 + 0.1);
 
