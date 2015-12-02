@@ -25,7 +25,7 @@ settings = {
     number: 100,
     maxsize: 100,
     minsize: 50,
-    hue: 270,
+    hue: 215,
     saturation: 100,
     rainbow: rainbow,
     generate: generate
