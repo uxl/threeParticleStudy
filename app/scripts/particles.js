@@ -102,63 +102,6 @@ var PARTICLES = (function() {
             }
             render();
         },
-        bokeh = function(x, y, r, symbol, s, rr, ro) {
-            context.shadowBlur = r / settings.minsize * (Math.random() * 9.9 + 0.1);
-
-            context.strokeStyle = "rgba(0, 0, 0, 0.5)";
-            context.fillStyle = "rgba(0, 0, 0, 0.3)";
-
-            context.save();
-            context.translate(x, y + settings.height);
-            context.beginPath();
-            switch (parseInt(symbol)) {
-                case 0:
-                    context.arc(0, 0, r, 0, 2 * Math.PI);
-                    break;
-                case 1:
-                    polygon(r, s, rr, ro);
-                    break;
-                case 2:
-                    nstar(r, s, rr, ro);
-                    break;
-                case 3:
-                    heart(r, rr, ro);
-                    break;
-            }
-            context.fill();
-            context.stroke();
-            context.restore();
-        },
-        polygon = function(r, s, rr, ro) {
-            a = 2 * Math.PI / s;
-
-            context.rotate(rr * (1 - 2 * Math.random()) * Math.PI + a / 2 + ro);
-
-            context.moveTo(0, r);
-            for (var i = 0; i < s; i++) {
-                context.rotate(a);
-                context.lineTo(0, r);
-            }
-        },
-        nstar = function(r, s, rr, ro) {
-            a = 2 * Math.PI / s;
-
-            context.rotate(rr * (1 - 2 * Math.random()) * Math.PI + a / 2 + ro);
-
-            context.moveTo(0, r);
-            for (var i = 0; i < 2 * s; i++) {
-                context.rotate(a / 2);
-                context.lineTo(0, r - (i % 2 == 0) * 2 * r / 3);
-            }
-        },
-        heart = function(r, rr, ro) {
-            context.rotate(rr * (1 - 2 * Math.random()) * Math.PI + ro);
-
-            context.moveTo(0, 3 * r / 2);
-            context.arc(-r / 2, 0, r / 2, 3 * Math.PI / 4, 0);
-            context.arc(r / 2, 0, r / 2, Math.PI, Math.PI / 4);
-            context.lineTo(0, 3 * r / 2);
-        },
         onWindowResize = function() {
 
             windowHalfX = window.innerWidth / 2;
@@ -178,11 +121,6 @@ var PARTICLES = (function() {
 
             var context = canvas.getContext('2d');
 
-            //   canvas.width = settings.width;
-            //   canvas.height = 3 * settings.height;
-            //   context = canvas.getContext("2d");
-
-
             context.fillStyle = "000";
             context.globalCompositeOperation = 'source-over';
             context.fillRect(0, 0, canvas.width, canvas.height);
@@ -190,18 +128,6 @@ var PARTICLES = (function() {
             context.lineWidth = 3;
             context.shadowColor = "hsl(0, 0%, 50%)";
             context.shadowOffsetY = -settings.height;
-
-            //   for (var i = 0; i < settings.number; i++) {
-            //     var x = Math.floor(1920 * Math.random()),
-            //         y = Math.floor(1080 * Math.random()),
-            //         r = maxsize - (settings.maxsize - settings.minsize) * Math.random();
-
-            //       var randomrot = 0;
-            //       var rotation = 0;
-            //       var vertices = 2;
-
-            //     bokeh(x, y, r, symbol, vertices, randomrot, Math.PI * rotation / 180);
-            //   }
 
             var gradient = context.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2);
             gradient.addColorStop(0, 'rgba(255,255,100,0.5)');
@@ -390,40 +316,6 @@ var PARTICLES = (function() {
                 alert('future feature');
             });
             gui.add(params, "reset");
-
-
-            //gui.add( effectController, "threshold", 0, 1, 0.001 ).onChange( matChanger );
-
-            // gui.add( effectController, "enabled" ).onChange( matChanger );
-            // gui.add( effectController, "jsDepthCalculation" ).onChange( matChanger );
-            // gui.add( effectController, "focalDepth", 0.0, 200.0 ).listen().onChange( matChanger );
-
-            // gui.add( effectController, "fstop", 0.1, 22, 0.001 ).onChange( matChanger );
-            // gui.add( effectController, "maxblur", 0.0, 5.0, 0.025 ).onChange( matChanger );
-
-            // gui.add( effectController, "showFocus" ).onChange( matChanger );
-            // gui.add( effectController, "manualdof" ).onChange( matChanger );
-            // gui.add( effectController, "vignetting" ).onChange( matChanger );
-
-            // gui.add( effectController, "depthblur" ).onChange( matChanger );
-
-            // gui.add( effectController, "threshold", 0, 1, 0.001 ).onChange( matChanger );
-            // gui.add( effectController, "gain", 0, 100, 0.001 ).onChange( matChanger );
-            // gui.add( effectController, "bias", 0,3, 0.001 ).onChange( matChanger );
-            // gui.add( effectController, "fringe", 0, 5, 0.001 ).onChange( matChanger );
-
-            // gui.add( effectController, "focalLength", 16, 80, 0.001 ).onChange( matChanger )
-
-            // gui.add( effectController, "noise" ).onChange( matChanger );
-
-            // gui.add( effectController, "dithering", 0, 0.001, 0.0001 ).onChange( matChanger );
-
-            // gui.add( effectController, "pentagon" ).onChange( matChanger );
-
-            // gui.add( shaderSettings, "rings", 1, 8).step(1).onChange( shaderUpdate );
-            // gui.add( shaderSettings, "samples", 1, 13).step(1).onChange( shaderUpdate );
-
-            // matChanger();
 
             window.addEventListener('resize', onWindowResize, false);
 
