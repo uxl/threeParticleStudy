@@ -62,17 +62,17 @@ function init() {
     object = new THREE.Object3D();
     scene.add(object);
 
-    var r = "images/";
-    var urls = [r + "posx.jpg", r + "negx.jpg",
-        r + "posy.jpg", r + "negy.jpg",
-        r + "posz.jpg", r + "negz.jpg"
-    ];
+    // var r = "images/";
+    // var urls = [r + "posx.jpg", r + "negx.jpg",
+    //     r + "posy.jpg", r + "negy.jpg",
+    //     r + "posz.jpg", r + "negz.jpg"
+    // ];
 
-    var textureCube = THREE.ImageUtils.loadTextureCube(urls);
-    textureCube.format = THREE.RGBFormat;
+    //var textureCube = THREE.ImageUtils.loadTextureCube(urls);
+    //textureCube.format = THREE.RGBFormat;
 
     // Skybox
-
+/*
     var shader = THREE.ShaderLib["cube"];
     shader.uniforms["tCube"].value = textureCube;
 
@@ -88,7 +88,7 @@ function init() {
 
     mesh = new THREE.Mesh(new THREE.BoxGeometry(1000, 1000, 1000), material);
     scene.add(mesh);
-
+    */
 
     // Focusing Floor
 
@@ -141,14 +141,19 @@ function init() {
     var loader2 = new THREE.JSONLoader();
     loader2.load('images/Suzanne.js', function(geometry) {
 
-        var material = new THREE.MeshPhongMaterial({
-            color: 0xffffff,
-            specular: 0xffffff,
-            envMap: textureCube,
-            combine: THREE.MultiplyOperation,
-            shininess: 50,
-            reflectivity: 1.0
+        var material = new THREE.MeshLambertMaterial({
+            color: 0x006699,
+            transparent: true,
+            opacity: 0.6
+            //specular: 0xffffff,
+            //envMap: textureCube,
+            //combine: THREE.MultiplyOperation,
+            //shininess: 50,
+            //reflectivity: 1.0
+            //blending: THREE.AdditiveBlending
+
         });
+        material.blending = THREE.AdditiveBlending;
 
         var monkeys = 5;
         var geometry = new THREE.SphereGeometry( 5, 32, 32 );
