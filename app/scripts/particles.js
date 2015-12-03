@@ -29,7 +29,7 @@ var PARTICLES = (function() {
         me = null,
         particle = null,
         texture = null,
-        extrudeSettings = null, 
+        extrudeSettings = null,
         init = function() {
             settings = {
                 number: 100,
@@ -77,7 +77,7 @@ var PARTICLES = (function() {
             // texture.repeat.set(0.008, 0.008);
 
             camera = new THREE.PerspectiveCamera(45, settings.width / settings.height, 0.1, 10000);
-            camera.position.set( 0, 0, settings.zoom);
+            camera.position.set(0, 0, settings.zoom);
             camera.lookAt(mesh.position);
 
             scene.add(camera);
@@ -95,6 +95,25 @@ var PARTICLES = (function() {
             pointLight.position.set(0, 300, 200);
 
             scene.add(pointLight);
+
+
+            geometry = new THREE.PlaneGeometry(window.innerWidth * 1.4, window.innerWidth, 200);
+
+            var loader = new THREE.TextureLoader();
+            loader.load('images/night.jpg', function(texture) {
+
+                //var geometry = new THREE.SphereGeometry( 200, 20, 20 );
+
+                var material = new THREE.MeshBasicMaterial({
+                    map: texture,
+                    side: THREE.FrontSide,
+                    overdraw: false
+                });
+                var mesh = new THREE.Mesh(geometry, material);
+                scene.add(mesh);
+                //raycaster = new THREE.Raycaster();
+            });
+
 
             //user events
             document.addEventListener('mousemove', onDocumentMouseMove, false);
@@ -140,23 +159,44 @@ var PARTICLES = (function() {
             console.log(shape.getCurveLengths());
             var geometry = new THREE.ShapeGeometry(shape);
             var material = new THREE.MeshPhongMaterial({
-                    color: 0xff0000,
-                    side: THREE.DoubleSide,
-                    blending: THREE.AdditiveBlending,
-                    opacity: 0.5,
-                    transparent: true
-                });
+                color: 0xff0000,
+                side: THREE.DoubleSide,
+                blending: THREE.AdditiveBlending,
+                opacity: 0.5,
+                transparent: true
+            });
 
             for (var i = 0; i < settings.number; i++) {
                 //console.log('creating: ' + i);
-                particle = new THREE.Mesh(material);
+                particle = new THREE.Mesh(geometry, material);
                 particle.name = "part" + i;
 
                 initParticle(particle, i * 10);
                 scene.add(particle);
             }
-            
+
         },
+        /*
+       // flat shape
+        var geometry = new THREE.ShapeGeometry(shape);
+
+        var mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({
+            color: color,
+            side: THREE.DoubleSide,
+            blending: THREE.AdditiveBlending,
+            opacity: 0.5,
+            transparent: true
+        }));
+        //particle.name = "part" + i;
+        // initParticle(mesh, 0);
+        mesh.position.set(x, y, z);
+        mesh.rotation.set(rx, ry, rz);
+        mesh.scale.set(s, s, s);
+
+        group.add(mesh);
+
+        break;
+        */
         initParticle = function(particle, delay) {
             var particle = this instanceof THREE.Mesh ? this : particle;
             var delay = delay !== undefined ? delay : 0;
@@ -167,7 +207,7 @@ var PARTICLES = (function() {
             particle.position.set(randomx, randomy, randomz);
             particle.scale.x = particle.scale.y = Math.random() * settings.maxsize + settings.minsize;
 
-    
+
             new TWEEN.Tween(particle)
                 .delay(delay)
                 .to({}, 10000)
