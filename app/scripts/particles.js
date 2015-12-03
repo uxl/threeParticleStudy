@@ -32,23 +32,27 @@ var PARTICLES = (function() {
         particle = null,
         texture = null,
         extrudeSettings = null,
+        pointLight = null,
         init = function() {
             settings = {
-                number: 200,
+                number: 20,
                 width: window.innerWidth,
                 height: window.innerHeight,
                 shape: 0,
-                randomrot: true,
                 rotation: 90,
                 vertices: 4,
-                maxsize: 2,
-                minsize: 1,
-                hue: 215,
-                saturation: 100,
-                spread: 100,
-                speed: 100000,
-                zoom: 1000,
-                renderer: 0
+                maxsize: 0.2,
+                minsize: 0.1,
+                spread: 0, //doesn't work
+                speed: 4000,
+                zoom: 2000,
+                renderer: 0,
+                cameramove:false,
+                reset:reset,
+                color: "#1861b3",
+                partZoom: 2000,
+                angle: 0,
+                lightZ: 15300
             };
 
 
@@ -62,25 +66,27 @@ var PARTICLES = (function() {
             cvcontainer.id = "particles";
             document.body.appendChild(cvcontainer);
 
-
+            //renderer = new THREE.CSS3DRenderer(); //mesh objects don't render. 
             setRenderer(settings.renderer);
+            
+
             renderer.setSize(windowX, windowY);
 
             cvcontainer.appendChild(renderer.domElement);
 
             scene = new THREE.Scene;
 
-            var cubeGeometry = new THREE.BoxGeometry(20, 20, 20);
-            var cubeMaterial = new THREE.MeshLambertMaterial({
-                color: 0xFF0000
-            });
+            // var cubeGeometry = new THREE.BoxGeometry(20, 20, 20);
+            // var cubeMaterial = new THREE.MeshLambertMaterial({
+            //     color: 0xFF0000
+            // });
 
-            var mesh = new THREE.Mesh(cubeGeometry, cubeMaterial);
-            mesh.rotation.y = 45;
-            mesh.position.y = -100;
-            scene.add(mesh);
+            // var mesh = new THREE.Mesh(cubeGeometry, cubeMaterial);
+            // mesh.rotation.y = 45;
+            // mesh.position.y = -100;
+            // scene.add(mesh);
 
-            geometry = new THREE.PlaneGeometry(window.innerWidth * 1.4, window.innerWidth, 200);
+            geometry = new THREE.PlaneGeometry(4000 * 1.4, 4000, 200);
 
             var loader = new THREE.TextureLoader();
             loader.load('images/night.jpg', function(texture) {
@@ -90,12 +96,13 @@ var PARTICLES = (function() {
                     overdraw: false
                 });
                 var map = new THREE.Mesh(geometry, material);
-                //scene.add(map);
+                scene.add(map);
+
             });
 
-            camera = new THREE.PerspectiveCamera(45, settings.width / settings.height, 0.1, 10000);
+            camera = new THREE.PerspectiveCamera(100, 1, 1, 2000);
             camera.position.set(0, 0, settings.zoom);
-            camera.lookAt(mesh.position);
+            //camera.lookAt(geometry.position);
 
             scene.add(camera);
 
@@ -108,11 +115,13 @@ var PARTICLES = (function() {
 
             scene.add(skybox);
 
-            var pointLight = new THREE.PointLight(0xffffff);
-            pointLight.position.set(0, 300, 200);
-
+            pointLight = new THREE.PointLight(0xffffff);
+            pointLight.position.set(0, 300, settings.lightZ);
             scene.add(pointLight);
 
+            var sphereSize = 1;
+            var pointLightHelper = new THREE.PointLightHelper( pointLight, sphereSize );
+            scene.add( pointLightHelper );
 
             //user events
             document.addEventListener('mousemove', onDocumentMouseMove, false);
@@ -123,13 +132,26 @@ var PARTICLES = (function() {
 
             //add dat.gui//
             gui = new dat.GUI();
-            gui.add(settings, "number").min(0).max(500).step(20).onFinishChange(reset);
-            gui.add(settings, "spread").min(0).max(1000).step(1).onFinishChange(reset);
+            gui.add(settings,'angle').listen();;
+            gui.addColor(settings,'color').onChange(reset);
+            gui.add(settings, "speed").min(500).max(30000).step(500).onFinishChange(function(){
+                reset();
+            });
+            gui.add(settings,'partZoom').min(0).max(30000).step(100).onFinishChange(reset);
+            gui.add(settings,'lightZ').min(0).max(30000).step(100).onFinishChange(reset);
+
+            gui.add(settings, "zoom").min(0).max(10000).step(500).onFinishChange(function(){
+                camera.position.set(0, 0, settings.zoom);
+                reset();
+            });
+            gui.add(settings, "number").min(0).max(500).step(1).onFinishChange(reset);
+            gui.add(settings, "spread").min(0).max(40000).step(1).onFinishChange(reset);
             gui.add(settings, "width", 0).step(1);
             gui.add(settings, "height", 0).step(1);
             gui.add(settings, "shape", {
                 circle: 0,
-                heart: 1
+                heart: 1,
+                hexagon: 2
             });
             gui.add(settings, "renderer", {
                 webgl: 0,
@@ -138,15 +160,15 @@ var PARTICLES = (function() {
             }).onChange(function() {
                 setRenderer(settings.renderer)
             });
-            gui.add(settings, "randomrot");
+            gui.add(settings, "cameramove");
             gui.add(settings, "rotation", 0, 360);
             gui.add(settings, "vertices", 2, 10).step(1);
-            gui.add(settings, "maxsize", 1, 200).onChange(update);
-            gui.add(settings, "minsize", 1, 200).onChange(function() {
+            gui.add(settings, "maxsize").min(0.1).max(1).step(0.1).onFinishChange(reset);
+            gui.add(settings, "minsize").min(0.1).max(1).step(0.1).onFinishChange(function() {
                 if (settings.minsize > settings.maxsize) this.setValue(settings.maxsize);
             });
-            gui.add(settings, "hue", 0, 360).onChange(update);
-            gui.add(settings, "saturation", 0, 100).onChange(update);
+            gui.add(settings, "reset");
+
 
             //add stats
             stats = new Stats();
@@ -162,7 +184,10 @@ var PARTICLES = (function() {
 
         },
         reset = function() {
+            pointLight.position.set(0, 300, settings.partZoom);
+
             removeParticles();
+            //setRenderer();
             createParticles();
             animate();
         },
@@ -175,15 +200,23 @@ var PARTICLES = (function() {
                     renderer = new THREE.CanvasRenderer();
                     break;
                 case 2:
-                    renderer = new THREE.CssRenderer();
+                    renderer = new THREE.CSS3DRenderer();
                     break;
             }
         },
+        getColor = function(){
+            var colorObj = new THREE.Color( settings.color );
+            var hex = colorObj.getHexString();
+            var newcolor = "0x"+ hex;
+            return eval(newcolor);
+        },
         createParticles = function() {
-            var shape = circleShape;
+            var shape = hexagonShape;
+            var color = getColor();
+            //console.log(color);
             var geometry = new THREE.ShapeGeometry(shape);
             var material = new THREE.MeshPhongMaterial({
-                color: 0xff0000,
+                color: color,
                 side: THREE.DoubleSide,
                 blending: THREE.AdditiveBlending,
                 opacity: 0.5,
@@ -194,7 +227,8 @@ var PARTICLES = (function() {
                 //console.log('creating: ' + i);
                 particle = new THREE.Mesh(geometry, material);
                 particle.name = "part" + i;
-                var delay = i * Math.random() * 10;
+                particle.orbit = Math.random*365;
+                var delay = i * Math.random() * 200;
                 initParticle(particle, delay);
                 scene.add(particle);
             }
@@ -203,42 +237,40 @@ var PARTICLES = (function() {
         initParticle = function(particle, delay) {
             var particle = this instanceof THREE.Mesh ? this : particle;
             var delay = delay !== undefined ? delay : 0;
-            var randomx = Math.random() * windowX - windowHalfX;
-            var randomy = Math.random() * windowY - windowHalfY;
-            var randomz = 100;
+            var randomx = Math.random() * windowX + settings.spread - windowHalfX;
+            var randomy = Math.random() * windowY + settings.spread - windowHalfY;
+            var randomz = settings.partZoom; //100
 
             particle.position.set(randomx, randomy, randomz);
-
-            // particle.position.x = Math.random() * windowX - windowHalfX;
-            // particle.position.y = Math.random() * windowY - windowHalfY;
-            // particle.position.z = 400;
-
             particle.scale.x = particle.scale.y = Math.random() * settings.maxsize + settings.minsize;
 
             //delay to reset particle
-            new TWEEN.Tween(particle)
-                .delay(delay)
-                .to({}, 800)
-                .onComplete(initParticle)
-                .start();
+            // new TWEEN.Tween(particle)
+            //     .delay(delay)
+            //     .to({}, settings.speed)
+            //     .onComplete(initParticle)
+            //     .start();
 
-            //
+            // //
             new TWEEN.Tween(particle.position)
                 .delay(delay)
                 .to({
-                    x: Math.random() * windowX - windowHalfX,
-                    y: Math.random() * windowY - windowHalfY,
-                    z: 0
+                    x: Math.random() * windowX - windowHalfX, // lon 
+                    y: Math.random() * windowY - windowHalfY, // lat 
+                    z: 1
                 }, settings.speed)
-                .start();
+                .start().onComplete(function(){
+                    //alert('woot');
+                    //finished animation
+                });
 
-            new TWEEN.Tween(particle.scale)
-                .delay(delay)
-                .to({
-                    x: 0.01,
-                    y: 0.01
-                }, 800)
-                .start();
+            // new TWEEN.Tween(particle.scale)
+            //     .delay(delay)
+            //     .to({
+            //         x: 0.01,
+            //         y: 0.01
+            //     }, settings.gravity)
+            //     .start();
 
         },
         removeParticles = function() {
@@ -263,80 +295,18 @@ var PARTICLES = (function() {
             render();
         },
         update = function() {
-            console.log('PARTICLE.update called')
-            for (var i in gui.__controllers) {
-                var c = gui.__controllers[i];
-                switch (c.property) {
-                    case "hue":
-                        c.__foreground.style.backgroundColor = "hsl(" + settings.hue + ", 100%, 50%)";
-                        break;
-                    case "saturation":
-                        c.__foreground.style.backgroundColor = "hsl(" + settings.hue + ", " + settings.saturation + "%, 50%)";
-                        break;
-                    case "minsize":
-                        c.setValue(settings.maxsize / 2);
-                        /*              c.__max = settings.maxsize; */
-                        break;
-                }
-            }
-        },
 
-        // RGB and HSL functions from
-        // https://gist.github.com/mjijackson/5311256
-        RTH = function(r, g, b) {
-            r /= 255, g /= 255, b /= 255;
-            var max = Math.max(r, g, b),
-                min = Math.min(r, g, b);
-            var h, s, l = (max + min) / 2;
-            if (max == min) {
-                h = s = 0;
-            } else {
-                var d = max - min;
-                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-                switch (max) {
-                    case r:
-                        h = (g - b) / d + (g < b ? 6 : 0);
-                        break;
-                    case g:
-                        h = (b - r) / d + 2;
-                        break;
-                    case b:
-                        h = (r - g) / d + 4;
-                        break;
-                }
-                h /= 6;
-            }
-            return {
-                h: h,
-                s: s,
-                l: l
-            };
-        },
-
-        HTR = function(h, s, l) {
-            var r, g, b;
-            if (s == 0) {
-                r = g = b = l;
-            } else {
-                function hue2rgb(p, q, t) {
-                    if (t < 0) t += 1;
-                    if (t > 1) t -= 1;
-                    if (t < 1 / 6) return p + (q - p) * 6 * t;
-                    if (t < 1 / 2) return q;
-                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-                    return p;
-                }
-                var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-                var p = 2 * l - q;
-                r = hue2rgb(p, q, h + 1 / 3);
-                g = hue2rgb(p, q, h);
-                b = hue2rgb(p, q, h - 1 / 3);
-            }
-            return {
-                r: r * 255,
-                g: g * 255,
-                b: b * 255
-            };
+            //loops through all gui settings
+            //switch statement updates all
+        //     for (var i in gui.__controllers) {
+        //         var c = gui.__controllers[i];
+        //         switch (c.property) {
+        //             case "minsize":
+        //                 c.setValue(settings.maxsize / 2);
+        //                 /*              c.__max = settings.maxsize; */
+        //                 break;
+        //         }
+        //     }
         },
         onDocumentMouseMove = function(event) {
 
@@ -381,6 +351,7 @@ var PARTICLES = (function() {
         },
         animate = function() {
             //console.log('PARTICLES.animate');
+            
             if (resetMe == true) {
                 resetMe = false;
             } else {
@@ -391,18 +362,19 @@ var PARTICLES = (function() {
             }
         },
         render = function() {
+            settings.angle = (settings.angle + 1) % 360;
 
             TWEEN.update();
-
-            camera.position.x += (mouseX - camera.position.x) * 0.05;
-            camera.position.y += (-mouseY - camera.position.y) * 0.05;
-            camera.lookAt(scene.position);
-
+            if(settings.cameramove){
+                camera.position.x += (mouseX - camera.position.x) * 0.05;
+                camera.position.y += (-mouseY - camera.position.y) * 0.05;
+                camera.lookAt(scene.position);
+            }
             renderer.render(scene, camera);
 
         };
     return {
         init: init,
-        settings: settings
+        camera: camera
     };
 }());

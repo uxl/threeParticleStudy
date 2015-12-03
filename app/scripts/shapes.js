@@ -22,3 +22,24 @@ for (var i = 0; i < 16; i++) {
     circleShape.lineTo(x, y);
   }
 }
+
+var hexagonShape = new THREE.Shape();
+hexagonShape.moveTo(  270,0 );
+hexagonShape.lineTo(  0,160 );
+hexagonShape.lineTo( 0,485 );
+hexagonShape.lineTo(  270,645 ); 
+hexagonShape.lineTo(  560,485 ); 
+hexagonShape.lineTo(  560,160 ); 
+
+//star
+var starShape = new THREE.Shape();
+starShape.moveTo(  350, 75 );
+starShape.lineTo(  379, 161 );
+starShape.lineTo( 469, 161 );
+starShape.lineTo(  397,215 ); 
+starShape.lineTo(  423,301 ); 
+starShape.lineTo(  350,250 ); 
+starShape.lineTo(  277,301 ); 
+starShape.lineTo(  303,215 ); 
+starShape.lineTo(  231,161 ); 
+starShape.lineTo(  321,161 ); 
