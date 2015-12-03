@@ -14,9 +14,11 @@ var PARTICLES = (function() {
         img = null,
         cv = null,
         ctx = null,
-        container = null,
+        cvcontainer = null,
         camera = null,
         scene = null,
+        windowX = null,
+        windowY = null,
         windowHalfX = null,
         windowHalfY = null,
         mouseX = null,
@@ -32,37 +34,43 @@ var PARTICLES = (function() {
         extrudeSettings = null,
         init = function() {
             settings = {
-                number: 100,
+                number: 200,
                 width: window.innerWidth,
                 height: window.innerHeight,
                 shape: 0,
                 randomrot: true,
                 rotation: 90,
                 vertices: 4,
-                number: 100,
                 maxsize: 2,
                 minsize: 1,
                 hue: 215,
                 saturation: 100,
                 spread: 100,
                 speed: 100000,
-                zoom: 1000
+                zoom: 1000,
+                renderer: 0
             };
 
-            windowHalfX = window.innerWidth / 2;
-            windowHalfY = window.innerHeight / 2;
 
-            container = document.createElement('div');
-            container.id = "particles";
-            document.body.appendChild(container);
+            windowX = window.innerWidth;
+            windowY = window.innerHeight;
 
-            renderer = new THREE.WebGLRenderer();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            container.appendChild(renderer.domElement);
+            windowHalfX = windowX / 2;
+            windowHalfY = windowY / 2;
+
+            cvcontainer = document.createElement('div');
+            cvcontainer.id = "particles";
+            document.body.appendChild(cvcontainer);
+
+
+            setRenderer(settings.renderer);
+            renderer.setSize(windowX, windowY);
+
+            cvcontainer.appendChild(renderer.domElement);
 
             scene = new THREE.Scene;
 
-            var cubeGeometry = new THREE.BoxGeometry(100, 100, 100);
+            var cubeGeometry = new THREE.BoxGeometry(20, 20, 20);
             var cubeMaterial = new THREE.MeshLambertMaterial({
                 color: 0xFF0000
             });
@@ -72,9 +80,18 @@ var PARTICLES = (function() {
             mesh.position.y = -100;
             scene.add(mesh);
 
-            // texture = THREE.ImageUtils.loadTexture("images/UV_Grid_Sm.jpg");
-            // texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-            // texture.repeat.set(0.008, 0.008);
+            geometry = new THREE.PlaneGeometry(window.innerWidth * 1.4, window.innerWidth, 200);
+
+            var loader = new THREE.TextureLoader();
+            loader.load('images/night.jpg', function(texture) {
+                var material = new THREE.MeshBasicMaterial({
+                    map: texture,
+                    side: THREE.FrontSide,
+                    overdraw: false
+                });
+                var map = new THREE.Mesh(geometry, material);
+                //scene.add(map);
+            });
 
             camera = new THREE.PerspectiveCamera(45, settings.width / settings.height, 0.1, 10000);
             camera.position.set(0, 0, settings.zoom);
@@ -97,40 +114,29 @@ var PARTICLES = (function() {
             scene.add(pointLight);
 
 
-            geometry = new THREE.PlaneGeometry(window.innerWidth * 1.4, window.innerWidth, 200);
-
-            var loader = new THREE.TextureLoader();
-            loader.load('images/night.jpg', function(texture) {
-
-                //var geometry = new THREE.SphereGeometry( 200, 20, 20 );
-
-                var material = new THREE.MeshBasicMaterial({
-                    map: texture,
-                    side: THREE.FrontSide,
-                    overdraw: false
-                });
-                var mesh = new THREE.Mesh(geometry, material);
-                scene.add(mesh);
-                //raycaster = new THREE.Raycaster();
-            });
-
-
             //user events
             document.addEventListener('mousemove', onDocumentMouseMove, false);
             document.addEventListener('touchstart', onDocumentTouchStart, false);
             document.addEventListener('touchmove', onDocumentTouchMove, false);
             window.addEventListener('resize', onWindowResize, false);
 
-            //add dat.gui
-            gui = new dat.GUI();
-            gui.add(settings, "number").min(0).max(1000).step(1).onChange(update);;
-            gui.add(settings, "spread").min(0).max(1000).step(1).onChange(update);;
 
+            //add dat.gui//
+            gui = new dat.GUI();
+            gui.add(settings, "number").min(0).max(500).step(20).onFinishChange(reset);
+            gui.add(settings, "spread").min(0).max(1000).step(1).onFinishChange(reset);
             gui.add(settings, "width", 0).step(1);
             gui.add(settings, "height", 0).step(1);
             gui.add(settings, "shape", {
                 circle: 0,
                 heart: 1
+            });
+            gui.add(settings, "renderer", {
+                webgl: 0,
+                canvas: 1,
+                css: 2
+            }).onChange(function() {
+                setRenderer(settings.renderer)
             });
             gui.add(settings, "randomrot");
             gui.add(settings, "rotation", 0, 360);
@@ -146,17 +152,35 @@ var PARTICLES = (function() {
             stats = new Stats();
             stats.domElement.style.position = 'absolute';
             stats.domElement.style.top = '0px';
-            container.appendChild(stats.domElement);
+            cvcontainer.appendChild(stats.domElement);
             camera.position.x += (mouseX - camera.position.x) * 0.05;
             camera.position.y += (-mouseY - camera.position.y) * 0.05;
             camera.lookAt(scene.position);
 
-            createParticles(circleShape);
+            createParticles();
             animate();
 
         },
-        createParticles = function(shape) {
-            console.log(shape.getCurveLengths());
+        reset = function() {
+            removeParticles();
+            createParticles();
+            animate();
+        },
+        setRenderer = function() {
+            switch (settings.renderer) {
+                case 0:
+                    renderer = new THREE.WebGLRenderer();
+                    break;
+                case 1:
+                    renderer = new THREE.CanvasRenderer();
+                    break;
+                case 2:
+                    renderer = new THREE.CssRenderer();
+                    break;
+            }
+        },
+        createParticles = function() {
+            var shape = circleShape;
             var geometry = new THREE.ShapeGeometry(shape);
             var material = new THREE.MeshPhongMaterial({
                 color: 0xff0000,
@@ -170,56 +194,41 @@ var PARTICLES = (function() {
                 //console.log('creating: ' + i);
                 particle = new THREE.Mesh(geometry, material);
                 particle.name = "part" + i;
-
-                initParticle(particle, i * 10);
+                var delay = i * Math.random() * 10;
+                initParticle(particle, delay);
                 scene.add(particle);
             }
 
         },
-        /*
-       // flat shape
-        var geometry = new THREE.ShapeGeometry(shape);
-
-        var mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({
-            color: color,
-            side: THREE.DoubleSide,
-            blending: THREE.AdditiveBlending,
-            opacity: 0.5,
-            transparent: true
-        }));
-        //particle.name = "part" + i;
-        // initParticle(mesh, 0);
-        mesh.position.set(x, y, z);
-        mesh.rotation.set(rx, ry, rz);
-        mesh.scale.set(s, s, s);
-
-        group.add(mesh);
-
-        break;
-        */
         initParticle = function(particle, delay) {
             var particle = this instanceof THREE.Mesh ? this : particle;
             var delay = delay !== undefined ? delay : 0;
-            var randomx = (Math.random() * settings.spread) - windowHalfX;
-            var randomy = (Math.random() * settings.spread) - windowHalfY;
-            var randomz = Math.random() * settings.spread;
+            var randomx = Math.random() * windowX - windowHalfX;
+            var randomy = Math.random() * windowY - windowHalfY;
+            var randomz = 100;
 
             particle.position.set(randomx, randomy, randomz);
+
+            // particle.position.x = Math.random() * windowX - windowHalfX;
+            // particle.position.y = Math.random() * windowY - windowHalfY;
+            // particle.position.z = 400;
+
             particle.scale.x = particle.scale.y = Math.random() * settings.maxsize + settings.minsize;
 
-
+            //delay to reset particle
             new TWEEN.Tween(particle)
                 .delay(delay)
-                .to({}, 10000)
+                .to({}, 800)
                 .onComplete(initParticle)
                 .start();
 
+            //
             new TWEEN.Tween(particle.position)
                 .delay(delay)
                 .to({
-                    x: Math.random() * 4000 - 2000,
-                    y: Math.random() * 1000 - 500,
-                    z: Math.random() * 4000 - 2000
+                    x: Math.random() * windowX - windowHalfX,
+                    y: Math.random() * windowY - windowHalfY,
+                    z: 0
                 }, settings.speed)
                 .start();
 
@@ -228,9 +237,30 @@ var PARTICLES = (function() {
                 .to({
                     x: 0.01,
                     y: 0.01
-                }, 10000)
+                }, 800)
                 .start();
 
+        },
+        removeParticles = function() {
+            var removeList = [];
+            console.log('PARTICLES.reset called');
+            scene.traverse(function(node) {
+                    if (node instanceof THREE.Mesh) {
+                        // insert your code here, for example:
+                        if ('part' == node.name.substring(0, 4)) {
+                            //console.log(node.name);
+                            removeList.push(node.name);
+                        }
+
+                    }
+                }
+            );
+            resetMe = true;
+            for (var i = 0; i < removeList.length; i++) {
+                var me = scene.getObjectByName(removeList[i]);
+                scene.remove(me);
+            }
+            render();
         },
         update = function() {
             console.log('PARTICLE.update called')
@@ -373,6 +403,6 @@ var PARTICLES = (function() {
         };
     return {
         init: init,
-        animate: animate
+        settings: settings
     };
 }());
