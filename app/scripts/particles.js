@@ -35,7 +35,7 @@ var PARTICLES = (function() {
         pointLight = null,
         init = function() {
             settings = {
-                number: 380,
+                number: 500,
                 width: window.innerWidth,
                 height: window.innerHeight,
                 shape: 0,
@@ -44,7 +44,7 @@ var PARTICLES = (function() {
                 maxsize: 0.2,
                 minsize: 0.1,
                 spread: 0, //doesn't work
-                speed: 2100,
+                speed: 8000,
                 zoom: 2000,
                 renderer: 0,
                 cameramove:false,
@@ -102,7 +102,7 @@ var PARTICLES = (function() {
 
             });
 
-            camera = new THREE.PerspectiveCamera(100, 1, 1, 2000);
+            camera = new THREE.PerspectiveCamera(100, 1, 1, 200000);
             camera.position.set(0, 0, settings.zoom);
             //camera.lookAt(geometry.position);
 
@@ -278,8 +278,8 @@ var PARTICLES = (function() {
             new TWEEN.Tween(particle.scale)
                 .delay(delay)
                 .to({
-                    x: 0,
-                    y: 0
+                    x: 0.05,
+                    y: 0.05
                 }, settings.speed)
                 .start();
 
@@ -377,8 +377,8 @@ var PARTICLES = (function() {
 
             TWEEN.update();
             if(settings.cameramove){
-                camera.position.x += (mouseX - camera.position.x) * 0.05;
-                camera.position.y += (-mouseY - camera.position.y) * 0.05;
+                camera.position.x += (mouseX*3 - camera.position.x) * 0.05;
+                camera.position.y += (-mouseY*3 - camera.position.y) * 0.05;
                 camera.lookAt(scene.position);
             }
             renderer.render(scene, camera);
