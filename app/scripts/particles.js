@@ -33,8 +33,8 @@ var PARTICLES = (function() {
         init = function() {
             settings = {
                 number: 100,
-                width: 1920,
-                height: 1080,
+                width: window.innerWidth,
+                height: window.innerHeight,
                 shape: 0,
                 randomrot: true,
                 rotation: 90,
@@ -44,7 +44,9 @@ var PARTICLES = (function() {
                 minsize: 1,
                 hue: 215,
                 saturation: 100,
-                spread: 100
+                spread: 100,
+                speed: 100000,
+                zoom: 1000
             };
 
             windowHalfX = window.innerWidth / 2;
@@ -70,13 +72,12 @@ var PARTICLES = (function() {
             mesh.position.y = -100;
             scene.add(mesh);
 
-            texture = THREE.ImageUtils.loadTexture("images/UV_Grid_Sm.jpg");
-            texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-            texture.repeat.set(0.008, 0.008);
+            // texture = THREE.ImageUtils.loadTexture("images/UV_Grid_Sm.jpg");
+            // texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+            // texture.repeat.set(0.008, 0.008);
 
             camera = new THREE.PerspectiveCamera(45, settings.width / settings.height, 0.1, 10000);
-            camera.position.y = 160;
-            camera.position.z = 1000;
+            camera.position.set( 0, 0, settings.zoom);
             camera.lookAt(mesh.position);
 
             scene.add(camera);
@@ -131,18 +132,13 @@ var PARTICLES = (function() {
             camera.position.y += (-mouseY - camera.position.y) * 0.05;
             camera.lookAt(scene.position);
 
-            //
-            //debugger;
             createParticles(circleShape);
             animate();
 
         },
-
         createParticles = function(shape) {
-            var points = shape.createPointsGeometry();
-            var spacedPoints = shape.createSpacedPointsGeometry(50);
+            console.log(shape.getCurveLengths());
             var geometry = new THREE.ShapeGeometry(shape);
-
             var material = new THREE.MeshPhongMaterial({
                     color: 0xff0000,
                     side: THREE.DoubleSide,
@@ -156,13 +152,48 @@ var PARTICLES = (function() {
                 particle = new THREE.Mesh(material);
                 particle.name = "part" + i;
 
-                //initParticle(particle, i * 10);
+                initParticle(particle, i * 10);
                 scene.add(particle);
             }
             
         },
+        initParticle = function(particle, delay) {
+            var particle = this instanceof THREE.Mesh ? this : particle;
+            var delay = delay !== undefined ? delay : 0;
+            var randomx = (Math.random() * settings.spread) - windowHalfX;
+            var randomy = (Math.random() * settings.spread) - windowHalfY;
+            var randomz = Math.random() * settings.spread;
 
+            particle.position.set(randomx, randomy, randomz);
+            particle.scale.x = particle.scale.y = Math.random() * settings.maxsize + settings.minsize;
+
+    
+            new TWEEN.Tween(particle)
+                .delay(delay)
+                .to({}, 10000)
+                .onComplete(initParticle)
+                .start();
+
+            new TWEEN.Tween(particle.position)
+                .delay(delay)
+                .to({
+                    x: Math.random() * 4000 - 2000,
+                    y: Math.random() * 1000 - 500,
+                    z: Math.random() * 4000 - 2000
+                }, settings.speed)
+                .start();
+
+            new TWEEN.Tween(particle.scale)
+                .delay(delay)
+                .to({
+                    x: 0.01,
+                    y: 0.01
+                }, 10000)
+                .start();
+
+        },
         update = function() {
+            console.log('PARTICLE.update called')
             for (var i in gui.__controllers) {
                 var c = gui.__controllers[i];
                 switch (c.property) {
@@ -276,40 +307,6 @@ var PARTICLES = (function() {
             camera.updateProjectionMatrix();
 
             renderer.setSize(window.innerWidth, window.innerHeight);
-
-        },
-        initParticle = function(particle, delay) {
-            var particle = this instanceof THREE.Mesh ? this : particle;
-            var delay = delay !== undefined ? delay : 0;
-            var randomx = (Math.random() * settings.spread) - windowHalfX;
-            var randomy = (Math.random() * settings.spread) - windowHalfY;
-            var randomz = Math.random() * settings.spread;
-
-            particle.position.set(randomx, randomy, randomz);
-            particle.scale.x = particle.scale.y = Math.random() * settings.maxSize + settings.minSize;
-
-            new TWEEN.Tween(particle)
-                .delay(delay)
-                .to({}, 10000)
-                .onComplete(initParticle)
-                .start();
-
-            new TWEEN.Tween(particle.position)
-                .delay(delay)
-                .to({
-                    x: Math.random() * 4000 - 2000,
-                    y: Math.random() * 1000 - 500,
-                    z: Math.random() * 4000 - 2000
-                }, settings.speed)
-                .start();
-
-            new TWEEN.Tween(particle.scale)
-                .delay(delay)
-                .to({
-                    x: 0.01,
-                    y: 0.01
-                }, 10000)
-                .start();
 
         },
         animate = function() {
