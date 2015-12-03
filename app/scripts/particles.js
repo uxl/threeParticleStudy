@@ -35,16 +35,16 @@ var PARTICLES = (function() {
         pointLight = null,
         init = function() {
             settings = {
-                number: 20,
+                number: 380,
                 width: window.innerWidth,
                 height: window.innerHeight,
                 shape: 0,
-                rotation: 90,
+                rotation: 50,
                 vertices: 4,
                 maxsize: 0.2,
                 minsize: 0.1,
                 spread: 0, //doesn't work
-                speed: 4000,
+                speed: 2100,
                 zoom: 2000,
                 renderer: 0,
                 cameramove:false,
@@ -52,7 +52,9 @@ var PARTICLES = (function() {
                 color: "#1861b3",
                 partZoom: 2000,
                 angle: 0,
-                lightZ: 15300
+                lightZ: 15300,
+                targetX: -1200, 
+                targetY: 850
             };
 
 
@@ -162,6 +164,8 @@ var PARTICLES = (function() {
             });
             gui.add(settings, "cameramove");
             gui.add(settings, "rotation", 0, 360);
+            gui.add(settings, "targetX").min(-3000).max(3000).step(100).onFinishChange(reset);
+            gui.add(settings, "targetY").min(-1000).max(1000).step(100).onFinishChange(reset);
             gui.add(settings, "vertices", 2, 10).step(1);
             gui.add(settings, "maxsize").min(0.1).max(1).step(0.1).onFinishChange(reset);
             gui.add(settings, "minsize").min(0.1).max(1).step(0.1).onFinishChange(function() {
@@ -255,22 +259,29 @@ var PARTICLES = (function() {
             new TWEEN.Tween(particle.position)
                 .delay(delay)
                 .to({
-                    x: Math.random() * windowX - windowHalfX, // lon 
-                    y: Math.random() * windowY - windowHalfY, // lat 
+                    x: ((Math.random()*100 - 50) + settings.targetX), // lon 
+                    y: ((Math.random()*100 - 50) + settings.targetY), // lat 
                     z: 1
                 }, settings.speed)
                 .start().onComplete(function(){
                     //alert('woot');
                     //finished animation
                 });
-
-            // new TWEEN.Tween(particle.scale)
-            //     .delay(delay)
-            //     .to({
-            //         x: 0.01,
-            //         y: 0.01
-            //     }, settings.gravity)
-            //     .start();
+       new TWEEN.Tween(particle.rotation)
+                .delay(delay)
+                .to({
+                    //x: Math.random()*settings.rotation,
+                    y: Math.random()*settings.rotation,
+                    z: Math.random()*settings.rotation
+                }, settings.speed)
+                .start();
+            new TWEEN.Tween(particle.scale)
+                .delay(delay)
+                .to({
+                    x: 0,
+                    y: 0
+                }, settings.speed)
+                .start();
 
         },
         removeParticles = function() {
