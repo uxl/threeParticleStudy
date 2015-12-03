@@ -121,7 +121,8 @@
 
 				// Fish
 
-				var x = y = 0;
+				var x  = 0,
+					y = 0;
 
 				var fishShape = new THREE.Shape();
 
