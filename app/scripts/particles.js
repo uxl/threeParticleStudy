@@ -14,7 +14,7 @@ var PARTICLES = (function() {
         img = null,
         cv = null,
         ctx = null,
-        cvcontainer = null,
+        particles = null,
         camera = null,
         scene = null,
         windowX = null,
@@ -63,68 +63,7 @@ var PARTICLES = (function() {
 
             windowHalfX = windowX / 2;
             windowHalfY = windowY / 2;
-
-            cvcontainer = document.createElement('div');
-            cvcontainer.id = "particles";
-            document.body.appendChild(cvcontainer);
-
-            //renderer = new THREE.CSS3DRenderer(); //mesh objects don't render. 
-            setRenderer(settings.renderer);
-            
-
-            renderer.setSize(windowX, windowY);
-
-            cvcontainer.appendChild(renderer.domElement);
-
-            scene = new THREE.Scene;
-
-            // var cubeGeometry = new THREE.BoxGeometry(20, 20, 20);
-            // var cubeMaterial = new THREE.MeshLambertMaterial({
-            //     color: 0xFF0000
-            // });
-
-            // var mesh = new THREE.Mesh(cubeGeometry, cubeMaterial);
-            // mesh.rotation.y = 45;
-            // mesh.position.y = -100;
-            // scene.add(mesh);
-
-            geometry = new THREE.PlaneGeometry(4000 * 1.4, 4000, 200);
-
-            var loader = new THREE.TextureLoader();
-            loader.load('images/night.jpg', function(texture) {
-                var material = new THREE.MeshBasicMaterial({
-                    map: texture,
-                    side: THREE.FrontSide,
-                    overdraw: false
-                });
-                var map = new THREE.Mesh(geometry, material);
-                scene.add(map);
-
-            });
-
-            camera = new THREE.PerspectiveCamera(100, 1, 1, 200000);
-            camera.position.set(0, 0, settings.zoom);
-            //camera.lookAt(geometry.position);
-
-            scene.add(camera);
-
-            var skyboxGeometry = new THREE.CubeGeometry(10000, 10000, 10000);
-            var skyboxMaterial = new THREE.MeshBasicMaterial({
-                color: 0x000000,
-                side: THREE.BackSide
-            });
-            var skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
-
-            scene.add(skybox);
-
-            pointLight = new THREE.PointLight(0xffffff);
-            pointLight.position.set(0, 300, settings.lightZ);
-            scene.add(pointLight);
-
-            var sphereSize = 1;
-            var pointLightHelper = new THREE.PointLightHelper( pointLight, sphereSize );
-            scene.add( pointLightHelper );
-
+          
             //user events
             document.addEventListener('mousemove', onDocumentMouseMove, false);
             document.addEventListener('touchstart', onDocumentTouchStart, false);
@@ -178,10 +117,7 @@ var PARTICLES = (function() {
             stats = new Stats();
             stats.domElement.style.position = 'absolute';
             stats.domElement.style.top = '0px';
-            cvcontainer.appendChild(stats.domElement);
-            camera.position.x += (mouseX - camera.position.x) * 0.05;
-            camera.position.y += (-mouseY - camera.position.y) * 0.05;
-            camera.lookAt(scene.position);
+            document.body.appendChild(stats.domElement);
 
             createParticles();
             animate();
@@ -209,44 +145,45 @@ var PARTICLES = (function() {
             }
         },
         getColor = function(){
-            var colorObj = new THREE.Color( settings.color );
+            //var colorObj = new THREE.Color( settings.color );
             var hex = colorObj.getHexString();
             var newcolor = "0x"+ hex;
             return eval(newcolor);
         },
         createParticles = function() {
-            var shape = hexagonShape;
-            var color = getColor();
-            //console.log(color);
-            var geometry = new THREE.ShapeGeometry(shape);
-            var material = new THREE.MeshPhongMaterial({
-                color: color,
-                side: THREE.DoubleSide,
-                blending: THREE.AdditiveBlending,
-                opacity: 0.5,
-                transparent: true
-            });
+            particles = document.createElement('div');
+            particles.id = "particles";
+            document.body.appendChild(particles);
 
             for (var i = 0; i < settings.number; i++) {
-                //console.log('creating: ' + i);
-                particle = new THREE.Mesh(geometry, material);
-                particle.name = "part" + i;
-                particle.orbit = Math.random*365;
+                var particle = document.createElement('div');
+                
+                // feed these into an obj store
+                //particle.id = "particle" + i;
+
+                //create divs called part1, ..2, ..3, etc with class=particle
+                particles.innerHTML += '<div id="part' + i + '" class="hex1 hexagon-wrapper"/>\<div class="color1 hexagon"/>\</div/>\</div/>';
+
+
+                //particle.orbit = Math.random*365;
                 var delay = i * Math.random() * 200;
-                initParticle(particle, delay);
-                scene.add(particle);
+                var part = document.getElementById('part' + i);
+                initParticle(part, delay);
+              
+                //initParticle(particle, delay);
             }
 
         },
         initParticle = function(particle, delay) {
-            var particle = this instanceof THREE.Mesh ? this : particle;
+            console.log('init');
             var delay = delay !== undefined ? delay : 0;
             var randomx = Math.random() * windowX + settings.spread - windowHalfX;
             var randomy = Math.random() * windowY + settings.spread - windowHalfY;
             var randomz = settings.partZoom; //100
 
-            particle.position.set(randomx, randomy, randomz);
-            particle.scale.x = particle.scale.y = Math.random() * settings.maxsize + settings.minsize;
+            console.log(randomx +  ',' + randomy + ',' + randomz);
+            particle.style.transform = "translate3d(" + randomx + "px," + randomy + "px," + randomz + "px)"; //might need px suffix
+            //particle.scale.x = particle.scale.y = Math.random() * settings.maxsize + settings.minsize;
 
             //delay to reset particle
             // new TWEEN.Tween(particle)
@@ -256,32 +193,32 @@ var PARTICLES = (function() {
             //     .start();
 
             // //
-            new TWEEN.Tween(particle.position)
-                .delay(delay)
-                .to({
-                    x: ((Math.random()*100 - 50) + settings.targetX), // lon 
-                    y: ((Math.random()*100 - 50) + settings.targetY), // lat 
-                    z: 1
-                }, settings.speed)
-                .start().onComplete(function(){
-                    //alert('woot');
-                    //finished animation
-                });
-       new TWEEN.Tween(particle.rotation)
-                .delay(delay)
-                .to({
-                    //x: Math.random()*settings.rotation,
-                    y: Math.random()*settings.rotation,
-                    z: Math.random()*settings.rotation
-                }, settings.speed)
-                .start();
-            new TWEEN.Tween(particle.scale)
-                .delay(delay)
-                .to({
-                    x: 0.05,
-                    y: 0.05
-                }, settings.speed)
-                .start();
+       //      new TWEEN.Tween(particle.position)
+       //          .delay(delay)
+       //          .to({
+       //              x: ((Math.random()*100 - 50) + settings.targetX), // lon 
+       //              y: ((Math.random()*100 - 50) + settings.targetY), // lat 
+       //              z: 1
+       //          }, settings.speed)
+       //          .start().onComplete(function(){
+       //              //alert('woot');
+       //              //finished animation
+       //          });
+       // new TWEEN.Tween(particle.rotation)
+       //          .delay(delay)
+       //          .to({
+       //              //x: Math.random()*settings.rotation,
+       //              y: Math.random()*settings.rotation,
+       //              z: Math.random()*settings.rotation
+       //          }, settings.speed)
+       //          .start();
+       //      new TWEEN.Tween(particle.scale)
+       //          .delay(delay)
+       //          .to({
+       //              x: 0.05,
+       //              y: 0.05
+       //          }, settings.speed)
+       //          .start();
 
         },
         removeParticles = function() {
@@ -376,12 +313,6 @@ var PARTICLES = (function() {
             settings.angle = (settings.angle + 1) % 360;
 
             TWEEN.update();
-            if(settings.cameramove){
-                camera.position.x += (mouseX*3 - camera.position.x) * 0.05;
-                camera.position.y += (-mouseY*3 - camera.position.y) * 0.05;
-                camera.lookAt(scene.position);
-            }
-            renderer.render(scene, camera);
 
         };
     return {
