@@ -7,7 +7,7 @@
 
 'use strict';
 
-var PARTICLES = (function() {
+var PARTICLES = (function($) {
 
     var settings = {},
         gui = null,
@@ -33,11 +33,12 @@ var PARTICLES = (function() {
         texture = null,
         extrudeSettings = null,
         pointLight = null,
+        particleList = [],
         init = function() {
             settings = {
                 number: 500,
-                width: window.innerWidth,
-                height: window.innerHeight,
+                width: screen.width,
+                height: screen.height,
                 shape: 0,
                 rotation: 50,
                 vertices: 4,
@@ -50,13 +51,12 @@ var PARTICLES = (function() {
                 cameramove:false,
                 reset:reset,
                 color: "#1861b3",
-                partZoom: 2000,
+                partZoom: 20000,
                 angle: 0,
                 lightZ: 15300,
                 targetX: -1200, 
                 targetY: 850
             };
-
 
             windowX = window.innerWidth;
             windowY = window.innerHeight;
@@ -124,25 +124,14 @@ var PARTICLES = (function() {
 
         },
         reset = function() {
-            pointLight.position.set(0, 300, settings.partZoom);
 
             removeParticles();
-            //setRenderer();
+            setRenderer();
             createParticles();
             animate();
         },
         setRenderer = function() {
-            switch (settings.renderer) {
-                case 0:
-                    renderer = new THREE.WebGLRenderer();
-                    break;
-                case 1:
-                    renderer = new THREE.CanvasRenderer();
-                    break;
-                case 2:
-                    renderer = new THREE.CSS3DRenderer();
-                    break;
-            }
+
         },
         getColor = function(){
             //var colorObj = new THREE.Color( settings.color );
@@ -164,97 +153,47 @@ var PARTICLES = (function() {
                 //create divs called part1, ..2, ..3, etc with class=particle
                 particles.innerHTML += '<div id="part' + i + '" class="hex1 hexagon-wrapper"/>\<div class="color1 hexagon"/>\</div/>\</div/>';
 
-
+                //add to objStore
+                particleList.push(particle);
                 //particle.orbit = Math.random*365;
                 var delay = i * Math.random() * 200;
                 var part = document.getElementById('part' + i);
                 initParticle(part, delay);
-              
+
                 //initParticle(particle, delay);
             }
 
         },
         initParticle = function(particle, delay) {
-            console.log('init');
             var delay = delay !== undefined ? delay : 0;
-            var randomx = Math.random() * windowX + settings.spread - windowHalfX;
-            var randomy = Math.random() * windowY + settings.spread - windowHalfY;
-            var randomz = settings.partZoom; //100
+            var randomx = windowX - Math.random() * windowX;
+            var randomy = windowY - Math.random() * windowY;
+            var randomz = Math.random()*settings.partZoom; //100
 
-            console.log(randomx +  ',' + randomy + ',' + randomz);
             particle.style.transform = "translate3d(" + randomx + "px," + randomy + "px," + randomz + "px)"; //might need px suffix
-            //particle.scale.x = particle.scale.y = Math.random() * settings.maxsize + settings.minsize;
 
-            //delay to reset particle
-            // new TWEEN.Tween(particle)
-            //     .delay(delay)
-            //     .to({}, settings.speed)
-            //     .onComplete(initParticle)
-            //     .start();
 
-            // //
-       //      new TWEEN.Tween(particle.position)
-       //          .delay(delay)
-       //          .to({
-       //              x: ((Math.random()*100 - 50) + settings.targetX), // lon 
-       //              y: ((Math.random()*100 - 50) + settings.targetY), // lat 
-       //              z: 1
-       //          }, settings.speed)
-       //          .start().onComplete(function(){
-       //              //alert('woot');
-       //              //finished animation
-       //          });
-       // new TWEEN.Tween(particle.rotation)
-       //          .delay(delay)
-       //          .to({
-       //              //x: Math.random()*settings.rotation,
-       //              y: Math.random()*settings.rotation,
-       //              z: Math.random()*settings.rotation
-       //          }, settings.speed)
-       //          .start();
-       //      new TWEEN.Tween(particle.scale)
-       //          .delay(delay)
-       //          .to({
-       //              x: 0.05,
-       //              y: 0.05
-       //          }, settings.speed)
-       //          .start();
+            setTimeout(function(){
+                particle.className = "boom";
+               //console.log('init: ' + particle);
+               //console.log('init: ' + particle.id);
+                //particle.style.transition = 'translate3d 1s';
+                //particle.style.transform = "translate3d(" + randomx + "px," + randomy + "px, 1px)"; //might need px suffix
+            },Math.random()*2000);
+
 
         },
         removeParticles = function() {
-            var removeList = [];
             console.log('PARTICLES.reset called');
-            scene.traverse(function(node) {
-                    if (node instanceof THREE.Mesh) {
-                        // insert your code here, for example:
-                        if ('part' == node.name.substring(0, 4)) {
-                            //console.log(node.name);
-                            removeList.push(node.name);
-                        }
-
-                    }
-                }
-            );
-            resetMe = true;
-            for (var i = 0; i < removeList.length; i++) {
-                var me = scene.getObjectByName(removeList[i]);
-                scene.remove(me);
-            }
-            render();
-        },
+            var len = particleList.length;
+                for(var i = 0; i < len; i++){
+                    $('#part' + i).remove();
+                  }
+                  particleList = [];
+            },
         update = function() {
 
-            //loops through all gui settings
-            //switch statement updates all
-        //     for (var i in gui.__controllers) {
-        //         var c = gui.__controllers[i];
-        //         switch (c.property) {
-        //             case "minsize":
-        //                 c.setValue(settings.maxsize / 2);
-        //                 /*              c.__max = settings.maxsize; */
-        //                 break;
-        //         }
-        //     }
+         
         },
         onDocumentMouseMove = function(event) {
 
@@ -319,4 +258,4 @@ var PARTICLES = (function() {
         init: init,
         camera: camera
     };
-}());
+}(jQuery));
