@@ -79,11 +79,9 @@ var PARTICLES = (function($) {
                 reset();
             });
             gui.add(settings,'partZoom').min(0).max(30000).step(100).onFinishChange(reset);
-            gui.add(settings,'lightZ').min(0).max(30000).step(100).onFinishChange(reset);
 
-            gui.add(settings, "zoom").min(0).max(10000).step(500).onFinishChange(function(){
-                camera.position.set(0, 0, settings.zoom);
-                reset();
+            gui.add(settings, "zoom").min(0).max(10000).step(500).onChange(function(){
+                $('body').css('perspective', settings.zoom + 'px');
             });
             gui.add(settings, "number").min(0).max(500).step(1).onFinishChange(reset);
             gui.add(settings, "spread").min(0).max(40000).step(1).onFinishChange(reset);
@@ -93,13 +91,6 @@ var PARTICLES = (function($) {
                 circle: 0,
                 heart: 1,
                 hexagon: 2
-            });
-            gui.add(settings, "renderer", {
-                webgl: 0,
-                canvas: 1,
-                css: 2
-            }).onChange(function() {
-                setRenderer(settings.renderer)
             });
             gui.add(settings, "cameramove");
             gui.add(settings, "rotation", 0, 360);
@@ -129,9 +120,6 @@ var PARTICLES = (function($) {
             setRenderer();
             createParticles();
             animate();
-        },
-        setRenderer = function() {
-
         },
         getColor = function(){
             //var colorObj = new THREE.Color( settings.color );
