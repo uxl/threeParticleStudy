@@ -36,7 +36,11 @@ var PARTICLES = (function($) {
         particleList = [],
         init = function() {
             settings = {
-                number: 500,
+                number: 100,
+                zoom: 400,
+                particleDepth: 200,
+                speedMax: 4,
+                speedMin: 3.5,
                 width: screen.width,
                 height: screen.height,
                 shape: 0,
@@ -45,17 +49,18 @@ var PARTICLES = (function($) {
                 maxsize: 0.2,
                 minsize: 0.1,
                 spread: 0, //doesn't work
-                speed: 8000,
-                zoom: 2000,
                 renderer: 0,
-                cameramove:false,
-                reset:reset,
+                cameramove: false,
+                cameramove: false,
+                reset: reset,
                 color: "#1861b3",
-                partZoom: 20000,
                 angle: 0,
                 lightZ: 15300,
-                targetX: -1200, 
-                targetY: 850
+                targetActive: false,
+                targetX: 400,
+                targetY: 400,
+                camx: 0,
+                camy: 0
             };
 
             windowX = window.innerWidth;
@@ -63,25 +68,33 @@ var PARTICLES = (function($) {
 
             windowHalfX = windowX / 2;
             windowHalfY = windowY / 2;
-          
+
             //user events
             document.addEventListener('mousemove', onDocumentMouseMove, false);
             document.addEventListener('touchstart', onDocumentTouchStart, false);
             document.addEventListener('touchmove', onDocumentTouchMove, false);
             window.addEventListener('resize', onWindowResize, false);
 
-
             //add dat.gui//
             gui = new dat.GUI();
-            gui.add(settings,'angle').listen();;
-            gui.addColor(settings,'color').onChange(reset);
-            gui.add(settings, "speed").min(500).max(30000).step(500).onFinishChange(function(){
+            gui.add(settings, 'particleDepth').min(0).max(30000).step(100).onFinishChange(reset);
+            gui.add(settings, "zoom").min(0).max(90000).step(500).onChange(function() {
+                $('body').css('perspective', settings.zoom + 'px');
                 reset();
             });
-            gui.add(settings,'partZoom').min(0).max(30000).step(100).onFinishChange(reset);
-
-            gui.add(settings, "zoom").min(0).max(10000).step(500).onChange(function(){
-                $('body').css('perspective', settings.zoom + 'px');
+            gui.add(settings, "cameramove");
+            gui.add(settings, 'camx').listen();
+            gui.add(settings, 'camy').listen();
+            gui.addColor(settings, 'color').onChange(
+                function() {
+                    $('.particle_color').css('background-color', settings.color)
+                }
+            );
+            gui.add(settings, "speedMax").min(0).max(10).step(0.5).onFinishChange(function() {
+                reset();
+            });
+            gui.add(settings, "speedMin").min(0).max(10).step(0.5).onFinishChange(function() {
+                reset();
             });
             gui.add(settings, "number").min(0).max(500).step(1).onFinishChange(reset);
             gui.add(settings, "spread").min(0).max(40000).step(1).onFinishChange(reset);
@@ -92,17 +105,17 @@ var PARTICLES = (function($) {
                 heart: 1,
                 hexagon: 2
             });
-            gui.add(settings, "cameramove");
             gui.add(settings, "rotation", 0, 360);
-            gui.add(settings, "targetX").min(-3000).max(3000).step(100).onFinishChange(reset);
-            gui.add(settings, "targetY").min(-1000).max(1000).step(100).onFinishChange(reset);
+            gui.add(settings, "targetActive");
+            gui.add(settings, "targetX").min(0).max(1920).step(10).onFinishChange(reset);
+            gui.add(settings, "targetY").min(0).max(1080).step(10).onFinishChange(reset);
             gui.add(settings, "vertices", 2, 10).step(1);
             gui.add(settings, "maxsize").min(0.1).max(1).step(0.1).onFinishChange(reset);
             gui.add(settings, "minsize").min(0.1).max(1).step(0.1).onFinishChange(function() {
                 if (settings.minsize > settings.maxsize) this.setValue(settings.maxsize);
             });
+            gui.add(settings, 'angle').listen();
             gui.add(settings, "reset");
-
 
             //add stats
             stats = new Stats();
@@ -115,16 +128,14 @@ var PARTICLES = (function($) {
 
         },
         reset = function() {
-
             removeParticles();
-            setRenderer();
             createParticles();
             animate();
         },
-        getColor = function(){
+        getColor = function() {
             //var colorObj = new THREE.Color( settings.color );
             var hex = colorObj.getHexString();
-            var newcolor = "0x"+ hex;
+            var newcolor = "0x" + hex;
             return eval(newcolor);
         },
         createParticles = function() {
@@ -133,60 +144,66 @@ var PARTICLES = (function($) {
             document.body.appendChild(particles);
 
             for (var i = 0; i < settings.number; i++) {
-                var particle = document.createElement('div');
-                
-                // feed these into an obj store
-                //particle.id = "particle" + i;
-
-                //create divs called part1, ..2, ..3, etc with class=particle
-                particles.innerHTML += '<div id="part' + i + '" class="hex1 hexagon-wrapper"/>\<div class="color1 hexagon"/>\</div/>\</div/>';
-
+                $('#particles').append('<div id="part' + i + '" class="hex1 hexagon-wrapper"><div class="particle_color hexagon"></div></div>');
                 //add to objStore
                 particleList.push(particle);
                 //particle.orbit = Math.random*365;
-                var delay = i * Math.random() * 200;
-                var part = document.getElementById('part' + i);
-                initParticle(part, delay);
 
-                //initParticle(particle, delay);
+                //var $part = $('#' + particle.id);
+                var part = document.getElementById('part' + i);
+                //initParticle(i, delay);
+                //initParticle("part" + i, delay);
+
+
+                var randomx = Math.round(settings.width / 2 - Math.random() * settings.width / 2);
+                var randomy = Math.round(settings.height / 2 - Math.random() * settings.height / 2);
+                var randomz = Math.round(Math.random() * settings.particleDepth + 100);
+                var randomZrotation = Math.round(Math.random() * 4) * 360;
+                var randomXrotation = Math.round(Math.random() * 4) * 360;
+                var randomYrotation = Math.round(Math.random() * 4) * 360;
+                var particleSpeed = Math.random() * (settings.speedMax - settings.speedMin) + settings.speedMin;
+                var particleDelay = Math.random() * 0.5;
+
+
+                TweenLite.set(part, {
+                    rotationZ: randomZrotation,
+                    rotationX: randomXrotation,
+                    rotationY: randomYrotation,
+                    x: randomx,
+                    y: randomy,
+                    z: randomz
+                });
+                TweenLite.to(part, particleSpeed, {
+                    rotationX: 0,
+                    rotationY: 0,
+                    rotationZ: 0,
+                    z: 0,
+                    delay: particleDelay,
+                    ease: Sine.easeOut,
+                    transformOrigin: "left 50% -5"
+               });
             }
 
         },
-        initParticle = function(particle, delay) {
-            var delay = delay !== undefined ? delay : 0;
-            var randomx = windowX - Math.random() * windowX;
-            var randomy = windowY - Math.random() * windowY;
-            var randomz = Math.random()*settings.partZoom; //100
-
-            particle.style.transform = "translate3d(" + randomx + "px," + randomy + "px," + randomz + "px)"; //might need px suffix
-
-
-            setTimeout(function(){
-                particle.className = "boom";
-               //console.log('init: ' + particle);
-               //console.log('init: ' + particle.id);
-                //particle.style.transition = 'translate3d 1s';
-                //particle.style.transform = "translate3d(" + randomx + "px," + randomy + "px, 1px)"; //might need px suffix
-            },Math.random()*2000);
-
-
-        },
         removeParticles = function() {
-            console.log('PARTICLES.reset called');
+            console.log('PARTICLES.removeParticles called');
             var len = particleList.length;
-                for(var i = 0; i < len; i++){
-                    $('#part' + i).remove();
-                  }
-                  particleList = [];
-            },
+            for (var i = 0; i < len; i++) {
+                $('#part' + i).remove();
+            }
+            particleList = [];
+        },
         update = function() {
 
-         
+
         },
         onDocumentMouseMove = function(event) {
+            //console.log('moving');
+            //console.log('mouseX: ' + mouseX + ' mouseY: ' + mouseY)
 
             mouseX = event.clientX - windowHalfX;
             mouseY = event.clientY - windowHalfY;
+
         },
 
         onDocumentTouchStart = function(event) {
@@ -214,19 +231,15 @@ var PARTICLES = (function($) {
             }
         },
         onWindowResize = function() {
+            windowX = window.innerWidth;
+            windowY = window.innerHeight;
 
             windowHalfX = window.innerWidth / 2;
             windowHalfY = window.innerHeight / 2;
-
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-
-            renderer.setSize(window.innerWidth, window.innerHeight);
-
         },
         animate = function() {
             //console.log('PARTICLES.animate');
-            
+
             if (resetMe == true) {
                 resetMe = false;
             } else {
@@ -238,12 +251,19 @@ var PARTICLES = (function($) {
         },
         render = function() {
             settings.angle = (settings.angle + 1) % 360;
-
             TWEEN.update();
 
+            if (settings.cameramove) {
+
+                settings.camx += (mouseX * 3 - settings.camx) * 0.05;
+                settings.camy += (-mouseY * 3 - settings.camy) * 0.05;
+
+                //solve percent of screen width
+                //$('body').css('perspective-origin', settings.camx + ' ' + settings.camy);
+
+            }
         };
     return {
-        init: init,
-        camera: camera
+        init: init
     };
 }(jQuery));

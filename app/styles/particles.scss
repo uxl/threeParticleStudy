@@ -14,8 +14,18 @@ width:10px;
 }
 
 /* css treatment */
+
+#particles{
+  z-index: -1;
+  padding:1em;
+  position: absolute;
+}
+
+
 .particle{
 	position:absolute;
+  left:0px;
+  top:0px;
 	padding:1em;
 }
 
@@ -28,7 +38,7 @@ margin-right: 20px;
 
 body {
   background: #000;
-  perspective: 10000px;
+  perspective: 200px;
 }
 
 .hex1 {
@@ -45,33 +55,24 @@ body {
   width: 200px;
   height: 200px;
 }
-
-.color1 {
+.particle_color {
   background-color: #39D; 
   opacity:0.5;
   background-blend-mode: screen;
 }
-/*.color1:hover {
-  transition: 1s ease-out;
-  background-color: #93D; 
-}
-*/
-.color2 {
-  background-color: #93D;
-}
-
-.color3 {
-  background-color: #D93;
-}
-
+/*.particle_color:hover {
+  background-color: red; 
+  opacity:0.5;
+  background-blend-mode: screen;
+}*/
 .hexagon-wrapper {
-  transition: 2s;
-  text-align: center;
+/*  transition: 2s;
+*/  text-align: center;
   margin: 20px;
   position: absolute;
   display: inline-block;
 }
-.boom {
+/*.boom {
 	transition-delay: 2s;
   text-align: center;
   margin: 20px;
@@ -80,13 +81,12 @@ body {
 
   background-color: #93D; 
   transform: translate3d(0px,0px,0px);
-}
+}*/
 .hexagon {
   height: 100%;
   width: calc(100% * 0.57735);
   display: inline-block;
 }
-
 
 .hexagon:before {
   position: absolute;

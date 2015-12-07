@@ -6,7 +6,8 @@
     "modernizr": "~2.8.3",
     "tween.js": "tweenjs#~16.3.1",
     "dat.gui": "*",
-    "stats.js": "*"
+    "stats.js": "*",
+    "gsap": "~1.18.0"
   },
   "overrides": {
     "bootstrap-sass": {
