@@ -1,9 +1,5 @@
 /* global console, PARTICLES */
-
-//todo:
-//complete rigging gui.dat
-//pull in bokeh from this reference:
-//http://jabtunes.com/labs/3d/dof/webgl_postprocessing_dof2.html
+//1359x800
 
 'use strict';
 
@@ -34,20 +30,33 @@ var PARTICLES = (function($) {
         extrudeSettings = null,
         pointLight = null,
         particleList = [],
+        places = {'data':
+                    [['ny',1470,1860],
+                    ['miami',1130,2510],
+                    ['newmexico',220,2510],
+                    ['ca',-439,2081],
+                    ['chicago', 796, 1864],
+                    ['city', 861, 2038],
+                    ['city', 211, 1561]]
+                },
+        colors = {'data':
+                    ['#1861b3','#6897cd','#b331bb']
+                },
         init = function() {
             settings = {
                 number: 100,
-                zoom: 400,
-                particleDepth: 200,
-                speedMax: 4,
-                speedMin: 3.5,
+                perspective: 500,
+                particleDepth: 20,
+                speedMax: 11,
+                speedMin: 9.5,
+                scaleMax: 2,
+                scaleMin: .5,
+                particleDelay: 5,
                 width: screen.width,
                 height: screen.height,
                 shape: 0,
-                rotation: 50,
+                rotation: 2,
                 vertices: 4,
-                maxsize: 0.2,
-                minsize: 0.1,
                 spread: 0, //doesn't work
                 renderer: 0,
                 cameramove: false,
@@ -60,7 +69,9 @@ var PARTICLES = (function($) {
                 targetX: 400,
                 targetY: 400,
                 camx: 0,
-                camy: 0
+                camy: 0, 
+                camPercentY:0, 
+                camPercentX:0
             };
 
             windowX = window.innerWidth;
@@ -77,43 +88,44 @@ var PARTICLES = (function($) {
 
             //add dat.gui//
             gui = new dat.GUI();
-            gui.add(settings, 'particleDepth').min(0).max(30000).step(100).onFinishChange(reset);
-            gui.add(settings, "zoom").min(0).max(90000).step(500).onChange(function() {
-                $('body').css('perspective', settings.zoom + 'px');
+            gui.add(settings, 'particleDepth').min(0).max(400).step(10).onFinishChange(reset);
+            gui.add(settings, "perspective").min(0).max(90000).step(500).onChange(function() {
+                $('body').css('perspective', settings.perspective + 'px');
                 reset();
             });
+            gui.add(settings, "particleDelay").min(0).max(30).step(0.5).onFinishChange(reset);
+
             gui.add(settings, "cameramove");
             gui.add(settings, 'camx').listen();
             gui.add(settings, 'camy').listen();
             gui.addColor(settings, 'color').onChange(
                 function() {
-                    $('.particle_color').css('background-color', settings.color)
+                    $('.particle_color').css('background-color', settings.color);
+                    reset();
                 }
             );
-            gui.add(settings, "speedMax").min(0).max(10).step(0.5).onFinishChange(function() {
-                reset();
-            });
-            gui.add(settings, "speedMin").min(0).max(10).step(0.5).onFinishChange(function() {
-                reset();
-            });
+            gui.add(settings, "scaleMax").min(0).max(10).step(0.25).onFinishChange(reset);
+            gui.add(settings, "scaleMin").min(0).max(20).step(0.25).onFinishChange(reset);
+
+            gui.add(settings, "speedMax").min(0).max(20).step(0.5).onFinishChange(reset);
+            gui.add(settings, "speedMin").min(0).max(20).step(0.5).onFinishChange(reset);
             gui.add(settings, "number").min(0).max(500).step(1).onFinishChange(reset);
             gui.add(settings, "spread").min(0).max(40000).step(1).onFinishChange(reset);
-            gui.add(settings, "width", 0).step(1);
-            gui.add(settings, "height", 0).step(1);
+            gui.add(settings, "width");
+            gui.add(settings, "height");
+            gui.add(settings, "camPercentX").listen();
+            gui.add(settings, "camPercentY").listen();
+
             gui.add(settings, "shape", {
                 circle: 0,
                 heart: 1,
                 hexagon: 2
             });
-            gui.add(settings, "rotation", 0, 360);
-            gui.add(settings, "targetActive");
-            gui.add(settings, "targetX").min(0).max(1920).step(10).onFinishChange(reset);
-            gui.add(settings, "targetY").min(0).max(1080).step(10).onFinishChange(reset);
+            gui.add(settings, "rotation", 0, 10).onChange(reset);
+            gui.add(settings, "targetActive").onChange(reset);
+            gui.add(settings, "targetX").min(-2000).max(4000).step(1).onFinishChange(reset);
+            gui.add(settings, "targetY").min(0).max(4000).step(1).onFinishChange(reset);
             gui.add(settings, "vertices", 2, 10).step(1);
-            gui.add(settings, "maxsize").min(0.1).max(1).step(0.1).onFinishChange(reset);
-            gui.add(settings, "minsize").min(0.1).max(1).step(0.1).onFinishChange(function() {
-                if (settings.minsize > settings.maxsize) this.setValue(settings.maxsize);
-            });
             gui.add(settings, 'angle').listen();
             gui.add(settings, "reset");
 
@@ -130,7 +142,7 @@ var PARTICLES = (function($) {
         reset = function() {
             removeParticles();
             createParticles();
-            animate();
+            $('.particle_color').css('background-color', settings.color)
         },
         getColor = function() {
             //var colorObj = new THREE.Color( settings.color );
@@ -152,38 +164,72 @@ var PARTICLES = (function($) {
                 //var $part = $('#' + particle.id);
                 var part = document.getElementById('part' + i);
                 //initParticle(i, delay);
-                //initParticle("part" + i, delay);
+                initParticle(part);
+            };
+        },
+        initParticle = function(part){
 
-
-                var randomx = Math.round(settings.width / 2 - Math.random() * settings.width / 2);
-                var randomy = Math.round(settings.height / 2 - Math.random() * settings.height / 2);
+                var randomx = Math.round(settings.width - Math.random() * settings.width);
+                var randomy = Math.round(settings.height/4 - Math.random() * settings.height/4);
                 var randomz = Math.round(Math.random() * settings.particleDepth + 100);
-                var randomZrotation = Math.round(Math.random() * 4) * 360;
-                var randomXrotation = Math.round(Math.random() * 4) * 360;
-                var randomYrotation = Math.round(Math.random() * 4) * 360;
-                var particleSpeed = Math.random() * (settings.speedMax - settings.speedMin) + settings.speedMin;
-                var particleDelay = Math.random() * 0.5;
 
+                var randomZrotation = Math.round(Math.random() * 1) * 360;
+                var randomXrotation = Math.round(Math.random() * 1) * 360;
+                var randomYrotation = Math.round(Math.random() * 1) * 360;
+
+                var randomScale = Math.random() * (settings.scaleMax - settings.scaleMin) + settings.scaleMin;
+
+                var particleSpeed = Math.random() * (settings.speedMax - settings.speedMin) + settings.speedMin;
+                var particleDelay = Math.random() * settings.particleDelay;
+
+                var randomPlace = Math.floor(Math.random() * places.data.length);
+                //console.log(randomPlace + " | " + places.data[randomPlace][0][0]);
+
+                var myTargetX = places.data[randomPlace][1];
+                var myTargetY = places.data[randomPlace][2];
+
+                var randomOpacity = (Math.round(Math.random()*100) * 0.01);
+
+                console.log(randomOpacity);
 
                 TweenLite.set(part, {
                     rotationZ: randomZrotation,
                     rotationX: randomXrotation,
                     rotationY: randomYrotation,
+                    scaleX: randomScale,
+                    scaleY: randomScale,
                     x: randomx,
                     y: randomy,
-                    z: randomz
+                    z: randomz,
+                    opacity: randomOpacity
                 });
-                TweenLite.to(part, particleSpeed, {
-                    rotationX: 0,
-                    rotationY: 0,
-                    rotationZ: 0,
-                    z: 0,
-                    delay: particleDelay,
-                    ease: Sine.easeOut,
-                    transformOrigin: "left 50% -5"
-               });
-            }
-
+                if (settings.targetActive) {
+                    TweenLite.to(part, particleSpeed, {
+                        x: settings.targetX,
+                        y: settings.targetY,
+                        rotationX: 0,
+                        rotationY: 0,
+                        rotationZ: 0,
+                        scaleX: 1,
+                        scaleY: 1,
+                        z: -1000,
+                        delay: particleDelay,
+                        transformOrigin: "left 50% -5"
+                    });
+                } else {
+                    TweenLite.to(part, particleSpeed, {
+                        x: myTargetX,
+                        y: myTargetY,
+                        scaleX: 1,
+                        scaleY: 1,
+                        rotationX: 0,
+                        rotationY: 0,
+                        rotationZ: 0,
+                        z: -1000,
+                        delay: particleDelay,
+                        transformOrigin: "left 50% -5"
+                    });
+                }
         },
         removeParticles = function() {
             console.log('PARTICLES.removeParticles called');
@@ -195,26 +241,22 @@ var PARTICLES = (function($) {
         },
         update = function() {
 
-
         },
         onDocumentMouseMove = function(event) {
             //console.log('moving');
             //console.log('mouseX: ' + mouseX + ' mouseY: ' + mouseY)
 
-            mouseX = event.clientX - windowHalfX;
-            mouseY = event.clientY - windowHalfY;
+            mouseX = event.clientX;
+            mouseY = event.clientY;
 
         },
 
         onDocumentTouchStart = function(event) {
 
             if (event.touches.length == 1) {
-
                 event.preventDefault();
-
                 mouseX = event.touches[0].pageX - windowHalfX;
                 mouseY = event.touches[0].pageY - windowHalfY;
-
             }
 
         },
@@ -222,12 +264,9 @@ var PARTICLES = (function($) {
         onDocumentTouchMove = function(event) {
 
             if (event.touches.length == 1) {
-
                 event.preventDefault();
-
                 mouseX = event.touches[0].pageX - windowHalfX;
                 mouseY = event.touches[0].pageY - windowHalfY;
-
             }
         },
         onWindowResize = function() {
@@ -255,10 +294,12 @@ var PARTICLES = (function($) {
 
             if (settings.cameramove) {
 
-                settings.camx += (mouseX * 3 - settings.camx) * 0.05;
-                settings.camy += (-mouseY * 3 - settings.camy) * 0.05;
+                settings.camx += (mouseX - settings.camx) * 0.05;
+                settings.camy += (-mouseY - settings.camy) * 0.05;
 
                 //solve percent of screen width
+                settings.camPercentX = mouseX*100/windowX;
+                settings.camPercentY = mouseY*100/windowY;
                 //$('body').css('perspective-origin', settings.camx + ' ' + settings.camy);
 
             }
