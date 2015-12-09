@@ -1,4 +1,4 @@
-# README for XMASS CARD
+# README for threeParticleStudy
 
 Yo Webapp scaffold with buildcontrol deploy to gh-pages
 

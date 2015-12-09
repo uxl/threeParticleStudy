@@ -19,9 +19,7 @@ width:10px;
   z-index: -1;
   padding:1em;
   position: absolute;
-  background-color: red;
 }
-
 
 .particle{
 	position:absolute;
@@ -38,7 +36,7 @@ margin-right: 20px;
 }
 
 body {
-  background: #000;
+  background-color: #ffffff;
   perspective: 200px;
   perspective-origin: 50% 50%;
 }
@@ -119,8 +117,8 @@ body {
   left:0px;
   width:100%;
   height:1080px;
-  background-color:#000000;
+  background-color:#ffffff;
   background-size: 100% auto;
   background-repeat: no-repeat;
-  background-image: url("../images/night.jpg")
+  background-image: url("../images/Holiday_Card_MAP_Test.png")
 }

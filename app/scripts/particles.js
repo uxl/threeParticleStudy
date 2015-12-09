@@ -40,7 +40,7 @@ var PARTICLES = (function($) {
                     ['city', 211, 1561]]
                 },
         colors = {'data':
-                    ['#1861b3','#6897cd','#b331bb']
+                    ['#A3B4E8','#2D66C1','#C4D4EC','#82DFD6','#9FE4E6']
                 },
         init = function() {
             settings = {
@@ -56,7 +56,6 @@ var PARTICLES = (function($) {
                 height: screen.height,
                 shape: 0,
                 rotation: 2,
-                vertices: 4,
                 spread: 0, //doesn't work
                 renderer: 0,
                 cameramove: false,
@@ -118,24 +117,28 @@ var PARTICLES = (function($) {
             gui.add(settings, 'camy').listen();
             gui.add(settings, "camPercentX").listen();
             gui.add(settings, "camPercentY").listen();
-            gui.add(settings, "shape", {
-                circle: 0,
-                heart: 1,
-                hexagon: 2
-            });
+            // gui.add(settings, "shape", {
+            //     circle: 0,
+            //     heart: 1,
+            //     hexagon: 2
+            // });
             gui.add(settings, "rotation", 0, 10).onChange(reset);
             gui.add(settings, "targetActive").onChange(reset);
             gui.add(settings, "targetX").min(-2000).max(4000).step(1).onFinishChange(
                 function(){
-                    targetXpercentage = targetX*100/windowX;
+                    settings.targetXpercentage = settings.targetX*100/windowX;
                     reset();
                 }
             );
-            gui.add(settings, "targetY").min(0).max(4000).step(1).onFinishChange(reset);
+            gui.add(settings, "targetY").min(0).max(4000).step(1).onFinishChange(
+                function(){
+                    settings.targetYpercentage = settings.targetY*100/windowY;
+                    reset();
+                }
+            );
             gui.add(settings, "targetXpercentage").listen();
             gui.add(settings, "targetYpercentage").listen();
 
-            gui.add(settings, "vertices", 2, 10).step(1);
             gui.add(settings, 'angle').listen();
             gui.add(settings, "reset");
 
@@ -196,7 +199,7 @@ var PARTICLES = (function($) {
 
                 var randomColor = colors.data[Math.floor(Math.random() * colors.data.length)];
 
-                console.log(randomColor); //+ " | " + colors.data[randomColor]);
+                //console.log(randomColor); //+ " | " + colors.data[randomColor]);
 
                 var myTargetX = places.data[randomPlace][1];
                 var myTargetY = places.data[randomPlace][2];
