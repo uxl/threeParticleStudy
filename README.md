@@ -24,15 +24,15 @@ install grunt command line ( might need sudo )
 `npm install -g grunt-cli`
 
 ## Development environment
-1. `git clone git@github.com:uxl/xmasscard.git`
-2. `cd xmasscard`
+1. `git clone git@github.com:uxl/threeParticleStudy.git`
+2. `cd threeParticleStudy`
 3. `bower install` will install dependencies
 4. `npm install` will install grunt and node modules
 5. `grunt server` will build and initiate watch along with Livereload
 
 ## Deployment
 Deploy to gh-pages (public):
-http://uxl.github.io/xmasscard/
+http://uxl.github.io/threeParticleStudy
 
 ``` sh
 grunt build
@@ -50,4 +50,3 @@ grunt deploy
 ##Contributing
 
 Features and fixes should be submitted as a Pull Request. These will be reviewed and merged as they are ready.
-
